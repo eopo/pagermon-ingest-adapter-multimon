@@ -11,7 +11,16 @@ import Message from '@pagermon/ingest-core/lib/message/Message.js';
 class MultimonNgDecoder {
   constructor(config = {}) {
     this.config = config;
-    this.logger = config.logger;
+    const { logger } = config;
+    if (
+      !logger ||
+      typeof logger.info !== 'function' ||
+      typeof logger.error !== 'function' ||
+      typeof logger.debug !== 'function'
+    ) {
+      throw new Error('MultimonNgDecoder requires config.logger with info(), error() and debug() methods');
+    }
+    this.logger = logger;
     this.protocols = config.protocols || [];
     this.charset = config.charset;
     this.format = config.format || 'alpha';

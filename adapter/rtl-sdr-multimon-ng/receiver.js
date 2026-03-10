@@ -10,7 +10,11 @@ import readline from 'readline';
 class RtlSdrReceiver {
   constructor(config = {}) {
     this.config = config;
-    this.logger = config.logger;
+    const { logger } = config;
+    if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+      throw new Error('RtlSdrReceiver requires config.logger with info() and error() methods');
+    }
+    this.logger = logger;
     this.process = null;
     this.frequencies = config.frequencies || [];
     this.gain = config.gain;

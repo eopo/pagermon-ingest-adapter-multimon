@@ -237,6 +237,12 @@ npm start
 docker build -t pagermon-ingest-multimon:custom .
 ```
 
+Then edit `stack.env`:
+
+```bash
+INGEST_IMAGE=pagermon-ingest-multimon:custom
+```
+
 ### Build Exactly From A Release Tag
 
 For reproducible self-builds, build from a Git tag instead of a moving branch:
@@ -247,10 +253,10 @@ git checkout <release-tag>   # e.g. v1.2.0
 docker build -t pagermon-ingest-multimon:<release-tag> .
 ```
 
-Edit `stack.env`:
+Then edit `stack.env` to use the release-tagged image:
 
 ```bash
-INGEST_IMAGE=pagermon-ingest-multimon:custom
+INGEST_IMAGE=pagermon-ingest-multimon:<release-tag>
 ```
 
 ### Multi-Receiver Setup
