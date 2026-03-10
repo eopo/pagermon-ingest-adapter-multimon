@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.3.1...1.3.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* **deps:** bump @pagermon/ingest-core from 1.2.0 to 1.3.1 ([8672aa9](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/8672aa9b2540e05fe3cfb4791fc48391c4e1245f))
+* **deps:** bump @pagermon/ingest-core from 1.2.0 to 1.3.1 ([5d60b95](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/5d60b950d6e0940389de98ae9a01937966100062))
+* **deps:** bump actions/checkout from 4 to 6 ([07df24f](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/07df24fe9cc03e13f150da1797157e434a526e33))
+* **deps:** bump actions/checkout from 4 to 6 ([969c307](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/969c307dfc4dd1bb7a9802ef401a66ab4420084b))
+* **deps:** bump actions/setup-node from 4 to 6 ([04d6afa](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/04d6afa7105860cd43073b524b1a64b2c9b6ce7a))
+* **deps:** bump actions/setup-node from 4 to 6 ([0fe882b](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/0fe882bdaece7e8ab455c479c40140b8f98192de))
+* **deps:** bump peter-evans/create-pull-request from 6 to 8 ([55aa8e4](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/55aa8e4bfebd2a12d4d21e9280f21434bdd9b84f))
+* **deps:** bump peter-evans/create-pull-request from 6 to 8 ([2d6c277](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/2d6c277b37c48035530dc36459b816e019c4d118))
+
 ## [1.3.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.3.0...1.3.1) (2026-03-10)
 
 
