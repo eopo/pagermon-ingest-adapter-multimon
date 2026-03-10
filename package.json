@@ -40,7 +40,7 @@
     "npm": ">=9.0"
   },
   "dependencies": {
-    "@pagermon/ingest-core": "1.1.0"
+    "@pagermon/ingest-core": "1.2.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
