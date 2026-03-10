@@ -173,9 +173,9 @@ docker compose up -d
 
 ### USB Device Access
 
-The compose file uses `privileged: true` for plug-and-play RTL-SDR access.
+The compose file uses `privileged: true` and runs the ingest service as `root` for reliable plug-and-play RTL-SDR access.
 
-For non-privileged mode, configure host udev rules and add container user to `plugdev` group.
+For hardened non-root mode, configure host udev rules and add the container user to the correct USB device group (often `plugdev`).
 
 ## Troubleshooting
 
