@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.2.0...v1.3.0) (2026-03-10)
+
+
+### Features
+
+* update @pagermon/ingest-core to v1.2.0 ([e037391](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/e037391d11a726988541845a4d27653665897e7e))
+
+
+### Bug Fixes
+
+* skip lefthook install in production builds ([441fe72](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/441fe72ee1f0916e2d41c6dc94e8fced3c0e0a42))
+* update API key header name and adjust test assertions in audio integration tests ([fb8cda2](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/fb8cda26ab17ac6b36fa384babbe1b4324b76c14))
+
 ## [1.2.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.1.0...v1.2.0) (2026-03-10)
 
 
