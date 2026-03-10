@@ -37,12 +37,15 @@ jobs:
           else
             VERSION="${{ github.event.client_payload.core_version }}"
           fi
+          # Remove 'v' prefix for npm
+          NPM_VERSION="${VERSION#v}"
           echo "core_version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Updating to core version: ${VERSION}"
+          echo "npm_version=${NPM_VERSION}" >> $GITHUB_OUTPUT
+          echo "Updating to core version: ${VERSION} (npm: ${NPM_VERSION})"
 
       - name: Update core dependency
         run: |
-          npm install @pagermon/ingest-core@${{ steps.version.outputs.core_version }} --save-exact
+          npm install @pagermon/ingest-core@${{ steps.version.outputs.npm_version }} --save-exact
           npm update
 
       - name: Run tests
