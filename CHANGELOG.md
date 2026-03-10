@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.3...v1.0.4) (2026-03-10)
+
+
+### Bug Fixes
+
+* Update @pagermon/ingest-core dependency to version 1.0.4 and adjust Dockerfile for npm ci ([6f9a4f4](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6f9a4f43153ed012ff346b20176faa39693fe260))
+
 ## [1.0.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.2...v1.0.3) (2026-03-10)
 
 
