@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.1...v1.0.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* Add PAT ([3169b07](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/3169b078e41e4bf9910b97d75955e4d9eeda6b7c))
+
 ## [1.0.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.0...v1.0.1) (2026-03-10)
 
 
