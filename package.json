@@ -17,6 +17,15 @@
     "check": "npm run format:check && npm run lint",
     "prepare": "husky"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eopo/pagermon-ingest-adapter-multimon"
+  },
+  "bugs": {
+    "url": "https://github.com/eopo/pagermon-ingest-adapter-multimon/issues"
+  },
+  "homepage": "https://github.com/eopo/pagermon-ingest-adapter-multimon",
+  "license": "GPL-2.0-or-later",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=9.0"
