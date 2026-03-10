@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.3.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.2.0...v1.3.0) (2026-03-10)
+
+
+### Features
+
+* update @pagermon/ingest-core to v1.2.0 ([e037391](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/e037391d11a726988541845a4d27653665897e7e))
+
+
+### Bug Fixes
+
+* skip lefthook install in production builds ([441fe72](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/441fe72ee1f0916e2d41c6dc94e8fced3c0e0a42))
+* update API key header name and adjust test assertions in audio integration tests ([fb8cda2](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/fb8cda26ab17ac6b36fa384babbe1b4324b76c14))
+
+## [1.2.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.1.0...v1.2.0) (2026-03-10)
+
+
+### Features
+
+* update @pagermon/ingest-core to 1.1.0 ([cd4a48a](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/cd4a48ab8bbffbe35a4d0e755c21e493581adae8))
+
+
+### Bug Fixes
+
+* update npm version handling in core dependency update workflow ([2edb390](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/2edb3900df8c7efaf6942faea1a2649cc6c5bd9a))
+
+## [1.1.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.4...v1.1.0) (2026-03-10)
+
+
+### Features
+
+* add workflow to update core dependency and run tests ([bc9a2c1](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/bc9a2c19348d7f6f17a3ba820ce1eb21d044be7e))
+
+
+### Bug Fixes
+
+* Update 'no-unused-vars' rule to include additional patterns for ignored variables ([6f4231a](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6f4231a131acf3ca244b9964148f32b32a458a91))
+
+## [1.0.4](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.3...v1.0.4) (2026-03-10)
+
+
+### Bug Fixes
+
+* Update @pagermon/ingest-core dependency to version 1.0.4 and adjust Dockerfile for npm ci ([6f9a4f4](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6f9a4f43153ed012ff346b20176faa39693fe260))
+
 ## [1.0.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.2...v1.0.3) (2026-03-10)
 
 

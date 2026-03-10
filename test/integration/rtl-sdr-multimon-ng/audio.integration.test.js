@@ -86,7 +86,7 @@ describe('multimon-ng audio integration', () => {
         receivedRequest = {
           method: req.method,
           url: req.url,
-          apiKey: req.headers['x-api-key'],
+          apiKey: req.headers['apikey'],
           payload: JSON.parse(body || '{}'),
         };
 
@@ -139,10 +139,10 @@ describe('multimon-ng audio integration', () => {
     const message = decoder.parseLine(firstJsonLine, 'audio-integration');
     expect(message).not.toBeNull();
 
-    const client = new ApiClient({ url: baseUrl, apiKey: 'audio-test-key' }, { retries: 0 });
+    const client = new ApiClient({ url: baseUrl, apiKey: 'audio-test-key' });
     const result = await client.submitMessage(message);
 
-    expect(result.success).toBe(true);
+    expect(result.accepted).toBe(true);
     expect(receivedRequest).toBeDefined();
     expect(receivedRequest.method).toBe('POST');
     expect(receivedRequest.url).toBe('/api/messages');
