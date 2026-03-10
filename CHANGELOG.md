@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.4...v1.1.0) (2026-03-10)
+
+
+### Features
+
+* add workflow to update core dependency and run tests ([bc9a2c1](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/bc9a2c19348d7f6f17a3ba820ce1eb21d044be7e))
+
+
+### Bug Fixes
+
+* Update 'no-unused-vars' rule to include additional patterns for ignored variables ([6f4231a](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6f4231a131acf3ca244b9964148f32b32a458a91))
+
 ## [1.0.4](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.3...v1.0.4) (2026-03-10)
 
 
