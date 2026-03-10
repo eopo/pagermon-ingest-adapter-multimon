@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.1.0...v1.2.0) (2026-03-10)
+
+
+### Features
+
+* update @pagermon/ingest-core to 1.1.0 ([cd4a48a](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/cd4a48ab8bbffbe35a4d0e755c21e493581adae8))
+
+
+### Bug Fixes
+
+* update npm version handling in core dependency update workflow ([2edb390](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/2edb3900df8c7efaf6942faea1a2649cc6c5bd9a))
+
 ## [1.1.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.4...v1.1.0) (2026-03-10)
 
 
