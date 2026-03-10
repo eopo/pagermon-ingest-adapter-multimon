@@ -35,6 +35,7 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --chown=node:node adapter /app/adapter
 COPY --chown=node:node index.js /app/index.js
 
-USER node
+# Keep root as runtime user for reliable USB device access with rtl-sdr.
+# Non-root execution can be enabled by advanced users with host udev/group setup.
 
 CMD ["node", "index.js"]
