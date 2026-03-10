@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.3.0...1.3.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* **deps:** bump docker/login-action from 3 to 4 ([894e00b](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/894e00bed6bf395021d233961ee3d54f71f543ab))
+* **deps:** bump docker/login-action from 3 to 4 ([6dabdcf](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6dabdcf477447acc3ccb920c0d0ce50b2c109b9c))
+* **deps:** bump docker/setup-buildx-action from 3 to 4 ([458dc0f](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/458dc0ff7c3a94e9b1e6ebbb9b65af9cf01ffa62))
+* **deps:** bump docker/setup-buildx-action from 3 to 4 ([38d2909](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/38d2909bec17daf24238406db54654261963da70))
+* **deps:** bump docker/setup-qemu-action from 3 to 4 ([fe4c34e](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/fe4c34e0ad14182d3d7a17eff1bc4b969a410ebc))
+* **deps:** bump docker/setup-qemu-action from 3 to 4 ([6bfebaf](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/6bfebaf1766a85d8a1b8db7899eb86b47ef9b998))
+* enhance release-please configuration ([3b52032](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/3b52032af8d692d4806596d2a92500e779f5ca0b))
+* update commit message prefixes in dependabot config and CI workflows; ([3b52032](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/3b52032af8d692d4806596d2a92500e779f5ca0b))
+
 ## [1.3.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.2.0...v1.3.0) (2026-03-10)
 
 
