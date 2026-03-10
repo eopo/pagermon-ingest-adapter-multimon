@@ -1,0 +1,61 @@
+name: Update Core Dependency
+
+on:
+  repository_dispatch:
+    types: [core-updated]
+  workflow_dispatch:
+    inputs:
+      core_version:
+        description: 'Core version to update to (e.g., v1.0.5)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Get core version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.core_version }}" ]; then
+            VERSION="${{ github.event.inputs.core_version }}"
+          else
+            VERSION="${{ github.event.client_payload.core_version }}"
+          fi
+          echo "core_version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Updating to core version: ${VERSION}"
+
+      - name: Update core dependency
+        run: |
+          npm install @pagermon/ingest-core@${{ steps.version.outputs.core_version }} --save-exact
+          npm update
+
+      - name: Run tests
+        run: npm test
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "feat: update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
+          git push
