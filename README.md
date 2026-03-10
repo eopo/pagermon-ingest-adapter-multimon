@@ -237,6 +237,16 @@ npm start
 docker build -t pagermon-ingest-multimon:custom .
 ```
 
+### Build Exactly From A Release Tag
+
+For reproducible self-builds, build from a Git tag instead of a moving branch:
+
+```bash
+git fetch --tags
+git checkout <release-tag>   # e.g. v1.2.0
+docker build -t pagermon-ingest-multimon:<release-tag> .
+```
+
 Edit `stack.env`:
 
 ```bash
