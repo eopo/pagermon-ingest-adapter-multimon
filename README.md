@@ -88,7 +88,7 @@ You should see initialization messages and decoded pager messages.
 Configure PagerMon API connection and queue behavior.
 
 | Variable                                  | Default              | Description                                        |
-|-------------------------------------------|----------------------|----------------------------------------------------|
+| ----------------------------------------- | -------------------- | -------------------------------------------------- |
 | `INGEST_CORE__API_URL`                    | _(required)_         | PagerMon server URL (e.g., `http://pagermon:3000`) |
 | `INGEST_CORE__API_KEY`                    | _(required)_         | API key from PagerMon server settings              |
 | `INGEST_CORE__LABEL`                      | `pagermon-ingest`    | Source label for messages                          |
@@ -104,14 +104,14 @@ Configure RTL-SDR receiver and multimon-ng decoder.
 #### Required
 
 | Variable                      | Description                                                                                  |
-|-------------------------------|----------------------------------------------------------------------------------------------|
+| ----------------------------- | -------------------------------------------------------------------------------------------- |
 | `INGEST_ADAPTER__FREQUENCIES` | Frequency in Hz (e.g., `163000000` for 163.0 MHz). Separate multiple with commas.            |
 | `INGEST_ADAPTER__PROTOCOLS`   | Protocol(s): `POCSAG512`, `POCSAG1200`, `POCSAG2400`, `FLEX`. Separate multiple with commas. |
 
 #### Optional
 
 | Variable                  | Default  | Description                                  |
-|---------------------------|----------|----------------------------------------------|
+| ------------------------- | -------- | -------------------------------------------- |
 | `INGEST_ADAPTER__GAIN`    | _(auto)_ | Tuner gain (0-50, or `auto`)                 |
 | `INGEST_ADAPTER__SQUELCH` | `0`      | Squelch level (0-100)                        |
 | `INGEST_ADAPTER__PPM`     | `0`      | Frequency correction in PPM                  |
