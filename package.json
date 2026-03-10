@@ -1,6 +1,6 @@
 {
   "name": "pagermon-ingest-multimon",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "PagerMon multimon adapter image and adapter implementation",
   "type": "module",
   "main": "index.js",
