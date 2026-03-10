@@ -1,0 +1,44 @@
+name: pagermon-ingest-multimon
+
+services:
+  ingest:
+    image: ${INGEST_IMAGE:-shutterfire/ingest-multimon:latest}
+    pull_policy: always
+    restart: unless-stopped
+    init: true
+    env_file:
+      - stack.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+    devices:
+      - /dev/bus/usb
+    # Keep privileged enabled by default for plug-and-play RTL-SDR access across distros.
+    # Advanced users can disable it and configure host udev/group permissions manually.
+    privileged: true
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    stop_grace_period: 20s
+    command:
+      - redis-server
+      - --appendonly
+      - yes
+      - --appendfsync
+      - everysec
+      - --save
+      - "60 1000"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:
+    driver: local

@@ -1,0 +1,36 @@
+{
+  "name": "pagermon-ingest-multimon",
+  "version": "1.0.0",
+  "description": "PagerMon multimon adapter image and adapter implementation",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,mjs,json,md}\"",
+    "check": "npm run format:check && npm run lint",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=9.0"
+  },
+  "dependencies": {
+    "@pagermon/ingest-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "vitest": "^2.1.8"
+  }
+}
