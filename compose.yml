@@ -2,7 +2,7 @@ name: pagermon-ingest-multimon
 
 services:
   ingest:
-    image: ${INGEST_IMAGE:-shutterfire/ingest-multimon:latest}
+    image: ${INGEST_IMAGE:-shutterfire/pagermon-ingest-multimon:latest}
     pull_policy: always
     restart: unless-stopped
     init: true

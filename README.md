@@ -4,6 +4,29 @@ RTL-SDR + multimon-ng source adapter for PagerMon.
 
 Supports POCSAG and FLEX pager protocols via RTL-SDR USB receivers.
 
+## Container Images
+
+Pre-built images are available from two registries:
+
+- **Docker Hub**: `shutterfire/pagermon-ingest-multimon`
+- **GitHub Container Registry**: `ghcr.io/eopo/pagermon-ingest-multimon`
+
+Both registries contain identical images. Choose based on your preference:
+
+```yaml
+# Docker Hub (default)
+image: shutterfire/pagermon-ingest-multimon:latest
+
+# Or GitHub Container Registry
+image: ghcr.io/eopo/pagermon-ingest-multimon:latest
+```
+
+To use GHCR, set in your `stack.env`:
+
+```bash
+INGEST_IMAGE=ghcr.io/eopo/pagermon-ingest-multimon:latest
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -206,13 +229,13 @@ npm start
 ### Custom Image Builds
 
 ```bash
-docker build -t ingest-multimon:custom .
+docker build -t pagermon-ingest-multimon:custom .
 ```
 
 Edit `stack.env`:
 
 ```bash
-INGEST_IMAGE=ingest-multimon:custom
+INGEST_IMAGE=pagermon-ingest-multimon:custom
 ```
 
 ### Multi-Receiver Setup
