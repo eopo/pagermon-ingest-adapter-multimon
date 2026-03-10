@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.2...v1.0.3) (2026-03-10)
+
+
+### Bug Fixes
+
+* Update Docker workflow for multi-arch builds and adjust release workflow for manual triggering ([fd0b52c](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/fd0b52c96f787a4bf5e665a5b7b4a3d4adedc663))
+
 ## [1.0.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.0.1...v1.0.2) (2026-03-10)
 
 
