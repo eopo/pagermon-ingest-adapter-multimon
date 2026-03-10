@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
-import { createMockLogger } from '@ingest-core-logger';
+import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
 
 describe('MultimonNgDecoder.parseLine', () => {
   it('parses POCSAG alpha JSON line into Message', () => {

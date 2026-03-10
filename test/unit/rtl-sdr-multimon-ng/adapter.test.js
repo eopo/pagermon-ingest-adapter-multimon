@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PassThrough } from 'stream';
 import RtlSdrMultimonNgAdapter from '../../../adapter/rtl-sdr-multimon-ng/adapter.js';
-import { createMockLogger } from '@ingest-core-logger';
+import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
 
 function buildAdapter() {
   const logger = createMockLogger(vi);
