@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
+import { createMockLogger } from '@ingest-core-logger';
 
 describe('MultimonNgDecoder.parseLine', () => {
   it('parses POCSAG alpha JSON line into Message', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'], logger: createMockLogger() });
     const line = JSON.stringify({
       demod_name: 'POCSAG1200',
       address: '123456',
@@ -21,13 +22,13 @@ describe('MultimonNgDecoder.parseLine', () => {
   });
 
   it('returns null on invalid input', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'], logger: createMockLogger() });
     expect(decoder.parseLine('not-json', 'unit-test')).toBe(null);
     expect(decoder.parseLine('', 'unit-test')).toBe(null);
   });
 
   it('parses FLEX message and normalizes numeric format', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['FLEX'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['FLEX'], logger: createMockLogger() });
     const line = JSON.stringify({
       demod_name: 'FLEX1600',
       capcode: '54321',
@@ -44,7 +45,7 @@ describe('MultimonNgDecoder.parseLine', () => {
   });
 
   it('returns null for unknown protocols and invalid alpha payloads', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200', 'FLEX'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200', 'FLEX'], logger: createMockLogger() });
 
     const unknown = JSON.stringify({
       demod_name: 'UNKNOWN',
@@ -78,7 +79,7 @@ describe('MultimonNgDecoder.parseLine', () => {
   });
 
   it('handles corrupt or incomplete JSON from multimon-ng', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'], logger: createMockLogger() });
 
     // Incomplete JSON (common with signal loss)
     expect(decoder.parseLine('{"demod_name":"POCSAG1200","addr', 'unit-test')).toBe(null);
@@ -93,7 +94,7 @@ describe('MultimonNgDecoder.parseLine', () => {
   });
 
   it('handles whitespace and special characters in messages', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'] });
+    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'], logger: createMockLogger() });
 
     // Leading/trailing whitespace is trimmed by decoder (see decoder.js:133, 157)
     const withWhitespace = JSON.stringify({
@@ -120,7 +121,10 @@ describe('MultimonNgDecoder.parseLine', () => {
   });
 
   it('handles rapid successive messages (frequency hopping scenario)', () => {
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200', 'POCSAG512'] });
+    const decoder = new MultimonNgDecoder({
+      protocols: ['POCSAG1200', 'POCSAG512'],
+      logger: createMockLogger(),
+    });
 
     // Simulate messages arriving in quick succession from different frequencies
     const msg1 = JSON.stringify({

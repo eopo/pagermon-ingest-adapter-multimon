@@ -1,23 +1,36 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PassThrough } from 'stream';
 import RtlSdrMultimonNgAdapter from '../../../adapter/rtl-sdr-multimon-ng/adapter.js';
+import { createMockLogger } from '@ingest-core-logger';
 
 function buildAdapter() {
+  const logger = createMockLogger(vi);
   return new RtlSdrMultimonNgAdapter({
     label: 'unit-label',
     receiver: { frequencies: [172.5] },
     decoder: { protocols: ['POCSAG1200'] },
+    logger,
   });
 }
 
 describe('RtlSdrMultimonNgAdapter', () => {
   it('validates receiver and decoder config', () => {
     expect(() => {
-      new RtlSdrMultimonNgAdapter({ receiver: {}, decoder: { protocols: ['POCSAG1200'] } });
+      const logger = createMockLogger(vi);
+      new RtlSdrMultimonNgAdapter({
+        receiver: {},
+        decoder: { protocols: ['POCSAG1200'] },
+        logger,
+      });
     }).toThrow('receiver.frequencies');
 
     expect(() => {
-      new RtlSdrMultimonNgAdapter({ receiver: { frequencies: [1] }, decoder: {} });
+      const logger = createMockLogger(vi);
+      new RtlSdrMultimonNgAdapter({
+        receiver: { frequencies: [1] },
+        decoder: {},
+        logger,
+      });
     }).toThrow('decoder.protocols');
   });
 

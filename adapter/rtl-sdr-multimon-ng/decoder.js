@@ -11,6 +11,7 @@ import Message from '@pagermon/ingest-core/lib/message/Message.js';
 class MultimonNgDecoder {
   constructor(config = {}) {
     this.config = config;
+    this.logger = config.logger;
     this.protocols = config.protocols || [];
     this.charset = config.charset;
     this.format = config.format || 'alpha';
@@ -44,19 +45,19 @@ class MultimonNgDecoder {
       args.push(...this.extraArgs.map((arg) => String(arg)));
     }
 
-    console.log(`[MULTIMON-NG] Spawning multimon-ng ${args.join(' ')}`);
+    this.logger.info({ args }, 'Spawning multimon-ng');
 
     this.process = spawn('multimon-ng', args, {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
     this.process.on('error', (err) => {
-      console.error('[MULTIMON-NG] Error:', err.message);
+      this.logger.error({ err: err.message }, 'Process error');
       process.exit(1);
     });
 
     this.process.on('exit', (code, signal) => {
-      console.error(`[MULTIMON-NG] Process exited: code=${code} signal=${signal}`);
+      this.logger.error({ code, signal }, 'Process exited');
       const exitCode = typeof code === 'number' ? code : signal ? 1 : 0;
       process.exit(exitCode);
     });
@@ -65,7 +66,7 @@ class MultimonNgDecoder {
     if (this.process.stderr) {
       const rl = readline.createInterface({ input: this.process.stderr });
       rl.on('line', (line) => {
-        console.log('[MULTIMON-NG]', line);
+        this.logger.debug({ line }, 'stderr');
         if (line.includes('status:')) {
           const match = /status: (\d)/.exec(line);
           if (match) process.exit(parseInt(match[1], 10));
@@ -106,7 +107,7 @@ class MultimonNgDecoder {
       } else if (demod.includes('FLEX')) {
         msg = this._parseFlex(obj);
       } else {
-        console.debug('[MULTIMON-NG] Unknown protocol:', demod);
+        this.logger.debug({ demod }, 'Unknown protocol');
         return null;
       }
 
@@ -124,7 +125,7 @@ class MultimonNgDecoder {
 
       const validation = message.validate();
       if (!validation.valid) {
-        console.debug('[MULTIMON-NG] Invalid message:', validation.errors);
+        this.logger.debug({ errors: validation.errors }, 'Invalid message');
         return null;
       }
 

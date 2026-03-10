@@ -8,7 +8,7 @@
     "start": "node index.js",
     "test": "vitest run",
     "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
+    "test:integration": "INGEST_TEST_LOG_LEVEL=${INGEST_TEST_LOG_LEVEL:-silent} vitest run test/integration",
     "test:watch": "vitest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -41,7 +41,7 @@
     "npm": ">=9.0"
   },
   "dependencies": {
-    "@pagermon/ingest-core": "1.3.1"
+    "@pagermon/ingest-core": "^1.4.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",

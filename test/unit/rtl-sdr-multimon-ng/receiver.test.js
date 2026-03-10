@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter } from 'events';
+import { createMockLogger } from '@ingest-core-logger';
 
 const spawnMock = vi.fn();
 const createInterfaceMock = vi.fn();
@@ -48,6 +49,7 @@ describe('RtlSdrReceiver', () => {
       device: 2,
       sampleRate: '24000',
       extraArgs: ['-M', 'fm'],
+      logger: createMockLogger(vi),
     });
 
     receiver.spawn();
@@ -93,7 +95,7 @@ describe('RtlSdrReceiver', () => {
     const stderrReader = new EventEmitter();
     createInterfaceMock.mockReturnValue(stderrReader);
 
-    const receiver = new RtlSdrReceiver({ frequencies: [172.5] });
+    const receiver = new RtlSdrReceiver({ frequencies: [172.5], logger: createMockLogger(vi) });
     receiver.spawn();
 
     expect(() => {
@@ -108,7 +110,7 @@ describe('RtlSdrReceiver', () => {
   });
 
   it('reports running state and stream access behavior', () => {
-    const receiver = new RtlSdrReceiver({ frequencies: [172.5] });
+    const receiver = new RtlSdrReceiver({ frequencies: [172.5], logger: createMockLogger(vi) });
 
     expect(receiver.isRunning()).toBeFalsy();
     expect(() => receiver.getOutputStream()).toThrow('rtl_fm not running');
