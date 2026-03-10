@@ -14,7 +14,7 @@ RUN git clone --depth 1 https://github.com/EliasOenal/multimon-ng.git /tmp/multi
     strip /usr/local/bin/multimon-ng && \
     rm -rf /tmp/multimon-ng
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 
 ARG CORE_NPM_PACKAGE=@pagermon/ingest-core@latest
 
