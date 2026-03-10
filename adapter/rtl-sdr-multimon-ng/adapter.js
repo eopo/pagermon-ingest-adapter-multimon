@@ -15,6 +15,10 @@ class RtlSdrMultimonNgAdapter {
     const baseLogger = config.logger;
     const metrics = config.metrics || null;
 
+    if (!baseLogger || typeof baseLogger.child !== 'function') {
+      throw new Error('RTL-SDR adapter requires config.logger with child() method');
+    }
+
     if (metrics) {
       this._metricsDecoded = metrics.counter({
         name: 'adapter_messages_decoded_total',

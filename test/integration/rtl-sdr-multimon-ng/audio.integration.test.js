@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { access } from 'fs/promises';
 import { constants } from 'fs';
 import { spawn } from 'child_process';
@@ -126,7 +126,7 @@ describe('multimon-ng audio integration', () => {
 
     const decoder = new MultimonNgDecoder({
       protocols: ['POCSAG1200'],
-      logger: createMockLogger(),
+      logger: createMockLogger(vi),
     });
     const firstJsonLine = combinedOutput
       .split('\n')
