@@ -1,10 +1,9 @@
 # PagerMon Ingest — Multimon Adapter
 
-[![npm version](https://img.shields.io/npm/v/pagermon-ingest-multimon.svg)](https://www.npmjs.com/package/pagermon-ingest-multimon)
-[![Node.js Version](https://img.shields.io/node/v/pagermon-ingest-multimon.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/github/license/eopo/pagermon-ingest-adapter-multimon.svg)](LICENSE)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/eopo/pagermon-ingest-adapter-multimon/ci.yml?branch=main&label=CI)](https://github.com/eopo/pagermon-ingest-adapter-multimon/actions)
-[![Docker Image](https://img.shields.io/badge/docker-eopo%2Fpagermon--ingest--multimon-blue)](https://hub.docker.com/r/eopo/pagermon-ingest-multimon)
+[![Docker Image Version](https://img.shields.io/docker/v/shutterfire/pagermon-ingest-multimon?label=docker%20image&sort=semver)](https://hub.docker.com/r/shutterfire/pagermon-ingest-multimon)
 
 RTL-SDR + multimon-ng source adapter for PagerMon.
 
