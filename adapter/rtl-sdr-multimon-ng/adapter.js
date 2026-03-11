@@ -12,6 +12,30 @@ class RtlSdrMultimonNgAdapter {
   constructor(config = {}) {
     this.config = config;
     this.label = config.label || 'pagermon-ingest';
+    const baseLogger = config.logger;
+    const metrics = config.metrics || null;
+
+    if (!baseLogger || typeof baseLogger.child !== 'function') {
+      throw new Error('RTL-SDR adapter requires config.logger with child() method');
+    }
+
+    if (metrics) {
+      this._metricsDecoded = metrics.counter({
+        name: 'adapter_messages_decoded_total',
+        help: 'Total messages successfully decoded by the adapter',
+        labelNames: ['format', 'source'],
+      });
+      this._metricsSkipped = metrics.counter({
+        name: 'adapter_messages_skipped_total',
+        help: 'Total lines from the decoder that produced no message (unknown protocol, validation failure, empty)',
+        labelNames: ['source'],
+      });
+      this._metricsErrors = metrics.counter({
+        name: 'adapter_messages_errors_total',
+        help: 'Total adapter message parse errors',
+        labelNames: ['source'],
+      });
+    }
 
     const adapterConfig = config.adapter || {};
     const receiverConfig = {
@@ -47,8 +71,14 @@ class RtlSdrMultimonNgAdapter {
       throw new Error('RTL-SDR adapter requires decoder.protocols');
     }
 
-    this.receiver = new RtlSdrReceiver(receiverConfig);
-    this.decoder = new MultimonNgDecoder(decoderConfig);
+    this.receiver = new RtlSdrReceiver({
+      ...receiverConfig,
+      logger: baseLogger.child({ component: 'receiver' }),
+    });
+    this.decoder = new MultimonNgDecoder({
+      ...decoderConfig,
+      logger: baseLogger.child({ component: 'decoder' }),
+    });
     this.lineReader = null;
     this.running = false;
   }
@@ -73,9 +103,13 @@ class RtlSdrMultimonNgAdapter {
       try {
         const message = this.decoder.parseLine(line, this.label);
         if (message) {
+          this._metricsDecoded?.inc({ format: message.format || 'unknown', source: this.label });
           onMessage(message);
+        } else {
+          this._metricsSkipped?.inc({ source: this.label });
         }
       } catch (err) {
+        this._metricsErrors?.inc({ source: this.label });
         if (onError) onError(err);
       }
     });

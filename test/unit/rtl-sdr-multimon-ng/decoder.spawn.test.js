@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter } from 'events';
+import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
 
 const spawnMock = vi.fn();
 const createInterfaceMock = vi.fn();
@@ -46,6 +47,7 @@ describe('MultimonNgDecoder.spawn', () => {
       charset: 'UTF-8',
       format: 'alpha',
       extraArgs: ['--label', 'test'],
+      logger: createMockLogger(vi),
     });
 
     decoder.spawn();

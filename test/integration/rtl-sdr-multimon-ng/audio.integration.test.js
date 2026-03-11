@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { access } from 'fs/promises';
 import { constants } from 'fs';
 import { spawn } from 'child_process';
@@ -8,6 +8,7 @@ import http from 'http';
 import { once } from 'events';
 import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
 import ApiClient from '@pagermon/ingest-core/lib/core/ApiClient.js';
+import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
 
 const SAMPLE_WAV_PATH = path.resolve('test/fixtures/pocsag1200.wav');
 
@@ -113,7 +114,7 @@ describe('multimon-ng audio integration', () => {
 
   it('decodes pocsag1200.wav and submits the expected API payload', async () => {
     if (!isMultimonAvailable()) {
-      console.log('[SKIP] multimon-ng not found in PATH');
+      // Keep integration output quiet by default; skip cleanly when dependency is missing.
       return;
     }
 
@@ -123,7 +124,10 @@ describe('multimon-ng audio integration', () => {
     const combinedOutput = `${output.stdout}\n${output.stderr}`.trim();
     expect(combinedOutput.length).toBeGreaterThan(0);
 
-    const decoder = new MultimonNgDecoder({ protocols: ['POCSAG1200'] });
+    const decoder = new MultimonNgDecoder({
+      protocols: ['POCSAG1200'],
+      logger: createMockLogger(vi),
+    });
     const firstJsonLine = combinedOutput
       .split('\n')
       .map((line) => line.trim())

@@ -10,6 +10,11 @@ import readline from 'readline';
 class RtlSdrReceiver {
   constructor(config = {}) {
     this.config = config;
+    const { logger } = config;
+    if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+      throw new Error('RtlSdrReceiver requires config.logger with info() and error() methods');
+    }
+    this.logger = logger;
     this.process = null;
     this.frequencies = config.frequencies || [];
     this.gain = config.gain;
@@ -48,19 +53,19 @@ class RtlSdrReceiver {
       args.push(...this.extraArgs.map((arg) => String(arg)));
     }
 
-    console.log(`[RTL-SDR] Spawning rtl_fm ${args.join(' ')}`);
+    this.logger.info({ args }, 'Spawning rtl_fm');
 
     this.process = spawn('rtl_fm', args, {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     this.process.on('error', (err) => {
-      console.error('[RTL-SDR] Error:', err.message);
+      this.logger.error({ err: err.message }, 'Process error');
       process.exit(1);
     });
 
     this.process.on('exit', (code, signal) => {
-      console.error(`[RTL-SDR] Process exited: code=${code} signal=${signal}`);
+      this.logger.error({ code, signal }, 'Process exited');
       const exitCode = typeof code === 'number' ? code : signal ? 1 : 0;
       process.exit(exitCode);
     });
@@ -69,7 +74,7 @@ class RtlSdrReceiver {
     if (this.process.stderr) {
       const rl = readline.createInterface({ input: this.process.stderr });
       rl.on('line', (line) => {
-        console.log('[RTL-SDR]', line);
+        this.logger.debug({ line }, 'stderr');
         if (line.includes('status:')) {
           const match = /status: (\d)/.exec(line);
           if (match) process.exit(parseInt(match[1], 10));
