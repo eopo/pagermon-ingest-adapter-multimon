@@ -6,7 +6,7 @@
 
 import { spawn } from 'child_process';
 import readline from 'readline';
-import Message from '@pagermon/ingest-core/lib/message/Message.js';
+import { Message } from '@pagermon/ingest-core';
 
 class MultimonNgDecoder {
   constructor(config = {}) {
@@ -122,23 +122,21 @@ class MultimonNgDecoder {
 
       if (!msg) return null;
 
-      // Create normalized Message object
-      const message = new Message({
+      const messageData = {
         address: msg.address,
         message: msg.message,
         format: msg.format,
-        source: label,
         timestamp: msg.timestamp,
         time: msg.time,
-      });
+        metadata: {
+          protocol: demod,
+          source: label,
+        },
+      };
 
-      const validation = message.validate();
-      if (!validation.valid) {
-        this.logger.debug({ errors: validation.errors }, 'Invalid message');
-        return null;
-      }
-
-      return message;
+      // Message constructor throws for invalid inputs (missing address, empty alpha).
+      // The outer try/catch handles those cases by returning null.
+      return new Message(messageData);
     } catch {
       return null;
     }

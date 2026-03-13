@@ -103,7 +103,10 @@ class RtlSdrMultimonNgAdapter {
       try {
         const message = this.decoder.parseLine(line, this.label);
         if (message) {
-          this._metricsDecoded?.inc({ format: message.format || 'unknown', source: this.label });
+          this._metricsDecoded?.inc({
+            format: message.format || 'unknown',
+            source: message.metadata?.source || this.label,
+          });
           onMessage(message);
         } else {
           this._metricsSkipped?.inc({ source: this.label });

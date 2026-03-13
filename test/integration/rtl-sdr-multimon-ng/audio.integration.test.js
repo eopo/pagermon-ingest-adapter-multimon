@@ -7,8 +7,7 @@ import path from 'path';
 import http from 'http';
 import { once } from 'events';
 import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
-import ApiClient from '@pagermon/ingest-core/lib/core/ApiClient.js';
-import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
+import { ApiClient, createMockLogger } from '@pagermon/ingest-core/testing';
 
 const SAMPLE_WAV_PATH = path.resolve('test/fixtures/pocsag1200.wav');
 

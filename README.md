@@ -57,14 +57,37 @@ Minimal required configuration:
 # Your PagerMon server URL
 INGEST_CORE__API_URL=http://pagermon:3000
 
+# Stable target name used in metrics labels (recommended)
+INGEST_CORE__API_NAME=pm-prod-a
+
 # Your PagerMon API key (get this from server settings)
 INGEST_CORE__API_KEY=your_api_key_here
+
+# Optional alternative: Docker secret file for key
+# INGEST_CORE__API_KEY_FILE=/run/secrets/pagermon_api_key
 
 # Frequency in Hz (example: 163.000 MHz = 163000000)
 INGEST_ADAPTER__FREQUENCIES=163000000
 
 # Protocol (POCSAG512, POCSAG1200, POCSAG2400, or FLEX)
 INGEST_ADAPTER__PROTOCOLS=POCSAG512
+```
+
+Rules for API key configuration:
+
+- Per API target, `KEY` and `KEY_FILE` are mutually exclusive (do not set both)
+- If `*_KEY_FILE` is unreadable or empty, startup fails with a configuration error
+
+Optional multi-target configuration:
+
+```bash
+INGEST_CORE__API_1_URL=http://pagermon-a:3000
+INGEST_CORE__API_1_NAME=pm-prod-a
+INGEST_CORE__API_1_KEY=key_a
+
+INGEST_CORE__API_2_URL=http://pagermon-b:3000
+INGEST_CORE__API_2_NAME=pm-prod-b
+INGEST_CORE__API_2_KEY_FILE=/run/secrets/pagermon_api2_key
 ```
 
 3. **Start the stack**
@@ -87,15 +110,21 @@ You should see initialization messages and decoded pager messages.
 
 Configure PagerMon API connection and queue behavior.
 
-| Variable                                  | Default              | Description                                        |
-| ----------------------------------------- | -------------------- | -------------------------------------------------- |
-| `INGEST_CORE__API_URL`                    | _(required)_         | PagerMon server URL (e.g., `http://pagermon:3000`) |
-| `INGEST_CORE__API_KEY`                    | _(required)_         | API key from PagerMon server settings              |
-| `INGEST_CORE__LABEL`                      | `pagermon-ingest`    | Source label for messages                          |
-| `INGEST_CORE__REDIS_URL`                  | `redis://redis:6379` | Redis connection URL                               |
-| `INGEST_CORE__ENABLE_DLQ`                 | `true`               | Enable dead-letter queue for failed messages       |
-| `INGEST_CORE__HEALTH_CHECK_INTERVAL`      | `10000`              | Health check interval in milliseconds              |
-| `INGEST_CORE__HEALTH_UNHEALTHY_THRESHOLD` | `3`                  | Failures before marking unhealthy                  |
+| Variable                                  | Default              | Description                                             |
+| ----------------------------------------- | -------------------- | ------------------------------------------------------- |
+| `INGEST_CORE__API_URL`                    | _(required)_         | PagerMon server URL (e.g., `http://pagermon:3000`)      |
+| `INGEST_CORE__API_NAME`                   | `target-1`           | Stable target name used in metrics labels               |
+| `INGEST_CORE__API_KEY`                    | conditional          | API key from PagerMon server settings                   |
+| `INGEST_CORE__API_KEY_FILE`               | conditional          | Docker secret file path for target 1 API key            |
+| `INGEST_CORE__API_<n>_URL`                | optional             | Additional PagerMon target URL                          |
+| `INGEST_CORE__API_<n>_NAME`               | `target-<n>`         | Stable target name for metrics labels                   |
+| `INGEST_CORE__API_<n>_KEY`                | conditional          | API key for target `n`                                  |
+| `INGEST_CORE__API_<n>_KEY_FILE`           | conditional          | Docker secret file path for target `n` API key          |
+| `INGEST_CORE__LABEL`                      | `pagermon-ingest`    | Default source label when adapter does not set `source` |
+| `INGEST_CORE__REDIS_URL`                  | `redis://redis:6379` | Redis connection URL                                    |
+| `INGEST_CORE__ENABLE_DLQ`                 | `true`               | Enable dead-letter queue for failed messages            |
+| `INGEST_CORE__HEALTH_CHECK_INTERVAL`      | `10000`              | Health check interval in milliseconds                   |
+| `INGEST_CORE__HEALTH_UNHEALTHY_THRESHOLD` | `3`                  | Failures before marking unhealthy                       |
 
 ### Adapter Settings
 
@@ -110,14 +139,21 @@ Configure RTL-SDR receiver and multimon-ng decoder.
 
 #### Optional
 
-| Variable                  | Default  | Description                                  |
-| ------------------------- | -------- | -------------------------------------------- |
-| `INGEST_ADAPTER__GAIN`    | _(auto)_ | Tuner gain (0-50, or `auto`)                 |
-| `INGEST_ADAPTER__SQUELCH` | `0`      | Squelch level (0-100)                        |
-| `INGEST_ADAPTER__PPM`     | `0`      | Frequency correction in PPM                  |
-| `INGEST_ADAPTER__DEVICE`  | `0`      | RTL-SDR device index (if multiple receivers) |
-| `INGEST_ADAPTER__CHARSET` | `UTF-8`  | Character encoding for decoded messages      |
-| `INGEST_ADAPTER__FORMAT`  | `alpha`  | Default message format hint                  |
+| Variable                  | Default  | Description                                                                                                                                                                             |
+| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INGEST_ADAPTER__GAIN`    | _(auto)_ | Tuner gain (0-50, or `auto`)                                                                                                                                                            |
+| `INGEST_ADAPTER__SQUELCH` | `0`      | Squelch level (0-100)                                                                                                                                                                   |
+| `INGEST_ADAPTER__PPM`     | `0`      | Frequency correction in PPM                                                                                                                                                             |
+| `INGEST_ADAPTER__DEVICE`  | `0`      | RTL-SDR device index (if multiple receivers)                                                                                                                                            |
+| `INGEST_ADAPTER__CHARSET` | `UTF-8`  | Character encoding for decoded messages                                                                                                                                                 |
+| `INGEST_ADAPTER__FORMAT`  | `alpha`  | Passed as `-f <value>` to multimon-ng (e.g., `alpha`, `numeric`). This is a decoder hint — the final PagerMon message format is resolved separately (see format resolution rules below) |
+
+The final PagerMon message `format` is resolved by ingest-core as normalized `alpha` or `numeric`.
+Resolution order is: explicit `format` -> `metadata.format` -> fallback inference (`alpha` if message text exists, else `numeric`).
+Protocol information such as `POCSAG1200` or `FLEX` remains separate from that normalized message type.
+
+This adapter sets `metadata.protocol` (for example `POCSAG1200` / `FLEX1600`) and `metadata.format` per decoded line.
+`source` is provided via `metadata.source` when available and is resolved by ingest-core; if empty, ingest-core applies `INGEST_CORE__LABEL` as default.
 
 ### Example Configurations
 
@@ -143,6 +179,120 @@ INGEST_ADAPTER__FREQUENCIES=929000000
 INGEST_ADAPTER__PROTOCOLS=FLEX
 INGEST_ADAPTER__GAIN=40
 ```
+
+## Metrics & Observability
+
+The adapter exposes Prometheus-compatible metrics through the shared ingest-core runtime.
+
+That means you get both:
+
+- core runtime metrics for queueing, worker throughput, API health, and adapter state
+- adapter-specific metrics for decode quality and parser behavior
+
+### Enabling Metrics
+
+By default, metrics collection is disabled. Enable the HTTP metrics endpoint:
+
+```bash
+# In stack.env:
+INGEST_CORE__METRICS_ENABLED=true
+INGEST_CORE__METRICS_PORT=9464       # Optional: default port
+INGEST_CORE__METRICS_HOST=0.0.0.0    # Optional: HTTP bind address
+INGEST_CORE__METRICS_PATH=/metrics   # Optional: HTTP endpoint path
+```
+
+If you change the port in `stack.env`, also change the compose port mapping variable so the container port and published port stay aligned:
+
+```bash
+INGEST_CORE__METRICS_PORT=9470
+INGEST_METRICS_PORT=9470
+```
+
+Then retrieve metrics (from metrics port):
+
+```bash
+curl http://localhost:9464/metrics
+```
+
+### Core Runtime Metrics
+
+With the default prefix `pagermon_ingest_`, the stack also exports shared ingest-core metrics such as:
+
+- `pagermon_ingest_messages_enqueued_total`
+- `pagermon_ingest_messages_processed_total{status="success",target_name="..."}`
+- `pagermon_ingest_messages_failed_total{reason="...",target_name="..."}`
+- `pagermon_ingest_message_process_duration_seconds{status="success|failure",target_name="..."}`
+- `pagermon_ingest_last_message_timestamp_seconds{target_name="..."}`
+- `pagermon_ingest_queue_depth_messages`
+- `pagermon_ingest_api_up{target_name="..."}`
+- `pagermon_ingest_health_check_failures_total{target_name="..."}`
+- `pagermon_ingest_adapter_up`
+
+### Adapter Metrics
+
+The adapter registers three counters to understand signal processing flow.
+The names below reflect the default prefix `pagermon_ingest_`.
+
+| Metric                                           | Labels             | Description                                                                                                                                                       |
+| ------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pagermon_ingest_adapter_messages_decoded_total` | `format`, `source` | Counter of successfully decoded pager messages. `format` is usually `alpha` or `numeric`.                                                                         |
+| `pagermon_ingest_adapter_messages_skipped_total` | `source`           | Counter of decoder output lines that produced no message (unknown protocol, invalid format, empty line). If this is high, check protocol/frequency configuration. |
+| `pagermon_ingest_adapter_messages_errors_total`  | `source`           | Counter of exceptions during message parsing. Indicates corrupt decoder output or schema mismatches.                                                              |
+
+If you override `INGEST_CORE__METRICS_PREFIX`, the exported names change accordingly.
+
+### Example Metric Output
+
+```
+# Decoded 42 POCSAG alpha messages, skipped 8 lines, 0 errors
+pagermon_ingest_adapter_messages_decoded_total{format="alpha",source="pagermon-ingest"} 42
+pagermon_ingest_adapter_messages_skipped_total{source="pagermon-ingest"} 8
+pagermon_ingest_adapter_messages_errors_total{source="pagermon-ingest"} 0
+
+# If decode ratio is poor, high skipped % indicates:
+# - Wrong frequency (capturing other signals)
+# - Incorrect protocol configuration
+# - Strong interference or weak signal
+```
+
+### Troubleshooting with Metrics
+
+- **High `skipped_total`**: Many decoder lines produce no valid message. Verify `INGEST_ADAPTER__FREQUENCIES` and `INGEST_ADAPTER__PROTOCOLS` are correct for your region.
+- **High `errors_total`**: Exceptions during decode. Review logs for `pagermon_ingest_adapter_messages_errors_total` increments and check for decoder binary/version issues.
+- **Low `decoded_total`**: Few messages decoded despite correct config. Adjust `INGEST_ADAPTER__GAIN` or `INGEST_ADAPTER__SQUELCH` or verify pager traffic exists on your frequency.
+
+### Grafana Dashboard
+
+A pre-built Grafana dashboard is included in the `grafana/` directory for visualizing adapter metrics.
+
+The bundled dashboard assumes the default metrics prefix `pagermon_ingest_`.
+If you change `INGEST_CORE__METRICS_PREFIX`, update the Prometheus queries in the dashboard accordingly.
+
+**Quick Start:**
+
+1. Import `grafana/pagermon-adapter-dashboard.json` into Grafana
+2. Select your Prometheus datasource
+3. View real-time metrics and decode quality
+
+**Dashboard Panels:**
+
+- **Message Processing Rates** — Decoded, skipped, and error rates over time
+- **Decode Quality %** — Cumulative quality percentage (good >90%, warning 50-89%, bad <50%)
+- **Message Distribution** — Pie chart of decoded vs. skipped vs. errors (cumulative)
+- **Counter Summary** — Table view of raw metric values
+
+Use the bundled dashboard JSON directly from `grafana/pagermon-adapter-dashboard.json` and adapt the Prometheus queries if you change the metric prefix.
+
+### Metrics for Adapter Authors
+
+This adapter uses the same `config.metrics` interface that all custom adapters receive from `@pagermon/ingest-core`.
+
+- Register counters, gauges, and histograms in the adapter constructor.
+- Use unprefixed names in code such as `adapter_messages_decoded_total`.
+- Let the runtime add the global prefix defined by `INGEST_CORE__METRICS_PREFIX`.
+- Use labels for dimensions like `format` and `source` instead of creating separate metric names per protocol.
+
+If you are building your own adapter, use the detailed guide in [../pagermon-ingest-core/ADAPTER_DEVELOPMENT.md](../pagermon-ingest-core/ADAPTER_DEVELOPMENT.md).
 
 ## Docker Compose Setup
 

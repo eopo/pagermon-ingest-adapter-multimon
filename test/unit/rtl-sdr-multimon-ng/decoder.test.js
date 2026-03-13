@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
-import { createMockLogger } from '@pagermon/ingest-core/lib/runtime/logger.js';
+import { createMockLogger } from '@pagermon/ingest-core/testing';
 
 describe('MultimonNgDecoder.parseLine', () => {
   it('parses POCSAG alpha JSON line into Message', () => {
@@ -18,7 +18,9 @@ describe('MultimonNgDecoder.parseLine', () => {
     expect(msg.address).toBe('1234561');
     expect(msg.message).toBe('TEST MESSAGE');
     expect(msg.format).toBe('alpha');
-    expect(msg.source).toBe('unit-test');
+    expect(msg.metadata.source).toBe('unit-test');
+    expect(msg.metadata.protocol).toBe('POCSAG1200');
+    expect(msg.metadata.format).toBe('alpha');
   });
 
   it('returns null on invalid input', () => {
@@ -42,6 +44,8 @@ describe('MultimonNgDecoder.parseLine', () => {
     expect(msg.address).toBe('54321');
     expect(msg.format).toBe('numeric');
     expect(msg.message).toBe('42');
+    expect(msg.metadata.protocol).toBe('FLEX1600');
+    expect(msg.metadata.format).toBe('numeric');
   });
 
   it('returns null for unknown protocols and invalid alpha payloads', () => {
