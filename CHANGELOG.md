@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.4.0...1.5.0) (2026-03-13)
+
+
+### Features
+
+* better logging ([85ba7bf](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/85ba7bfb3d5447f0dddaec89f44fd5f691938183))
+* better metrics ([85ba7bf](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/85ba7bfb3d5447f0dddaec89f44fd5f691938183))
+* update core to 1.5.0 ([01860be](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/01860be24754070f425fd5d533a5da084922b442))
+* update core to 1.5.0 ([85ba7bf](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/85ba7bfb3d5447f0dddaec89f44fd5f691938183))
+
 ## [1.4.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.3.2...1.4.0) (2026-03-11)
 
 
