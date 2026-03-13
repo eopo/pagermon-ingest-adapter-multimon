@@ -3,10 +3,8 @@ name: pagermon-ingest-multimon
 services:
   ingest:
     image: ${INGEST_IMAGE:-shutterfire/pagermon-ingest-multimon:latest}
-    pull_policy: always
     restart: unless-stopped
     init: true
-    user: "0:0"
     env_file:
       - stack.env
     depends_on:
@@ -16,6 +14,9 @@ services:
       - /dev/bus/usb:/dev/bus/usb
     devices:
       - /dev/bus/usb
+    ports:
+      # Metrics HTTP endpoint (enable in stack.env with INGEST_CORE__METRICS_ENABLED=true)
+      - "${INGEST_METRICS_PORT:-9464}:${INGEST_METRICS_PORT:-9464}"
     # Keep privileged enabled by default for plug-and-play RTL-SDR access across distros.
     # Advanced users can disable it and configure host udev/group permissions manually.
     privileged: true
