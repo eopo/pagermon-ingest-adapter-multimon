@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.3.2...1.4.0) (2026-03-11)
+
+
+### Features
+
+* enforce logger requirement in RTL-SDR adapter and update tests to use vi ([385d70e](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/385d70eab417a488707a8e1bfe4e810dd9d6ceff))
+* integrate logging and metrics ([0ad6e01](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/0ad6e012109b6b7fb614db11b62347fe0cf9cc91))
+* validate logger configuration in MultimonNgDecoder and RtlSdrReceiver constructors ([22e3cc1](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/22e3cc1cd1cabe6f8a4d12a0daef4d17a3830c95))
+
+
+### Bug Fixes
+
+* Update Dockerfile and compose.yml for USB device access and runtime user configuration ([306fef6](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/306fef6d54d4eb5c4a87fbe9ea0fe39165c3878c))
+* Update formatting commands in package.json to use .prettierrc configuration ([b242271](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/b242271f94c58df0ca760b75b5d34ed696774322))
+
 ## [1.3.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.3.1...1.3.2) (2026-03-10)
 
 
