@@ -125,6 +125,11 @@ Configure PagerMon API connection and queue behavior.
 | `INGEST_CORE__ENABLE_DLQ`                 | `true`               | Enable dead-letter queue for failed messages            |
 | `INGEST_CORE__HEALTH_CHECK_INTERVAL`      | `10000`              | Health check interval in milliseconds                   |
 | `INGEST_CORE__HEALTH_UNHEALTHY_THRESHOLD` | `3`                  | Failures before marking unhealthy                       |
+| `INGEST_CORE__METRICS_ENABLED`            | `false`              | Enable Prometheus metrics HTTP endpoint                 |
+| `INGEST_CORE__METRICS_PORT`               | `9464`               | Metrics HTTP port inside the ingest container           |
+| `INGEST_CORE__METRICS_HOST`               | `0.0.0.0`            | Metrics HTTP bind address                               |
+| `INGEST_CORE__METRICS_PATH`               | `/metrics`           | Metrics HTTP endpoint path                              |
+| `INGEST_CORE__METRICS_PREFIX`             | runtime default      | Prefix added to exported metric names                   |
 
 ### Adapter Settings
 
@@ -139,14 +144,16 @@ Configure RTL-SDR receiver and multimon-ng decoder.
 
 #### Optional
 
-| Variable                  | Default  | Description                                                                                                                                                                             |
-| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INGEST_ADAPTER__GAIN`    | _(auto)_ | Tuner gain (0-50, or `auto`)                                                                                                                                                            |
-| `INGEST_ADAPTER__SQUELCH` | `0`      | Squelch level (0-100)                                                                                                                                                                   |
-| `INGEST_ADAPTER__PPM`     | `0`      | Frequency correction in PPM                                                                                                                                                             |
-| `INGEST_ADAPTER__DEVICE`  | `0`      | RTL-SDR device index (if multiple receivers)                                                                                                                                            |
-| `INGEST_ADAPTER__CHARSET` | `UTF-8`  | Character encoding for decoded messages                                                                                                                                                 |
-| `INGEST_ADAPTER__FORMAT`  | `alpha`  | Passed as `-f <value>` to multimon-ng (e.g., `alpha`, `numeric`). This is a decoder hint — the final PagerMon message format is resolved separately (see format resolution rules below) |
+| Variable                              | Default   | Description                                                                                                                                                                                        |
+| ------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INGEST_ADAPTER__GAIN`                | _(auto)_  | Tuner gain (0-50, or `auto`)                                                                                                                                                                       |
+| `INGEST_ADAPTER__SQUELCH`             | `0`       | Squelch level (0-100)                                                                                                                                                                              |
+| `INGEST_ADAPTER__PPM`                 | `0`       | Frequency correction in PPM                                                                                                                                                                        |
+| `INGEST_ADAPTER__DEVICE`              | `0`       | RTL-SDR device index (if multiple receivers)                                                                                                                                                       |
+| `INGEST_ADAPTER__CHARSET`             | `UTF-8`   | Character encoding for decoded messages                                                                                                                                                            |
+| `INGEST_ADAPTER__FORMAT`              | _(unset)_ | Optional decoder hint passed as `-f <value>` to multimon-ng only when set (e.g., `alpha`, `numeric`). The final PagerMon message format is resolved separately (see format resolution rules below) |
+| `INGEST_ADAPTER__RTL_FM_EXTRA_ARGS`   | _(empty)_ | Optional passthrough args appended to `rtl_fm` command (whitespace-separated string or JSON array string, e.g., `-M fm -s 24000` or `["-M","fm","-s","24000"]`)                                    |
+| `INGEST_ADAPTER__MULTIMON_EXTRA_ARGS` | _(empty)_ | Optional passthrough args appended to `multimon-ng` command (whitespace-separated string or JSON array string, e.g., `--label ingest-a` or `["--label","ingest-a"]`)                               |
 
 The final PagerMon message `format` is resolved by ingest-core as normalized `alpha` or `numeric`.
 Resolution order is: explicit `format` -> `metadata.format` -> fallback inference (`alpha` if message text exists, else `numeric`).
@@ -154,6 +161,21 @@ Protocol information such as `POCSAG1200` or `FLEX` remains separate from that n
 
 This adapter sets `metadata.protocol` (for example `POCSAG1200` / `FLEX1600`) and `metadata.format` per decoded line.
 `source` is provided via `metadata.source` when available and is resolved by ingest-core; if empty, ingest-core applies `INGEST_CORE__LABEL` as default.
+
+### Compose Runtime Variables
+
+These variables are used by `compose.yml` itself (outside ingest-core adapter parsing):
+
+| Variable              | Default                                       | Description                                          |
+| --------------------- | --------------------------------------------- | ---------------------------------------------------- |
+| `INGEST_IMAGE`        | `shutterfire/pagermon-ingest-multimon:latest` | Container image tag used for the `ingest` service    |
+| `INGEST_METRICS_PORT` | `9464`                                        | Host/container port mapping for the metrics endpoint |
+
+### Development/Test Variables
+
+| Variable                | Default  | Description                                  |
+| ----------------------- | -------- | -------------------------------------------- |
+| `INGEST_TEST_LOG_LEVEL` | `silent` | Log level used by `npm run test:integration` |
 
 ### Example Configurations
 

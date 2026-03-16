@@ -58,7 +58,7 @@ class RtlSdrMultimonNgAdapter {
         .map((v) => v.trim())
         .filter(Boolean),
       charset: adapterConfig.charset ?? null,
-      format: adapterConfig.format || 'alpha',
+      format: parseOptionalString(adapterConfig.format),
       extraArgs: parseArgList(adapterConfig.multimon_extra_args),
       ...(config.decoder || {}),
     };
@@ -175,6 +175,15 @@ function parseArgList(value) {
   }
 
   return trimmed.split(/\s+/).filter(Boolean);
+}
+
+function parseOptionalString(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const trimmed = String(value).trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 export default RtlSdrMultimonNgAdapter;
