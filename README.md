@@ -144,16 +144,16 @@ Configure RTL-SDR receiver and multimon-ng decoder.
 
 #### Optional
 
-| Variable                              | Default   | Description                                                                                                                                                                             |
-| ------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INGEST_ADAPTER__GAIN`                | _(auto)_  | Tuner gain (0-50, or `auto`)                                                                                                                                                            |
-| `INGEST_ADAPTER__SQUELCH`             | `0`       | Squelch level (0-100)                                                                                                                                                                   |
-| `INGEST_ADAPTER__PPM`                 | `0`       | Frequency correction in PPM                                                                                                                                                             |
-| `INGEST_ADAPTER__DEVICE`              | `0`       | RTL-SDR device index (if multiple receivers)                                                                                                                                            |
-| `INGEST_ADAPTER__CHARSET`             | `UTF-8`   | Character encoding for decoded messages                                                                                                                                                 |
-| `INGEST_ADAPTER__FORMAT`              | `alpha`   | Passed as `-f <value>` to multimon-ng (e.g., `alpha`, `numeric`). This is a decoder hint — the final PagerMon message format is resolved separately (see format resolution rules below) |
-| `INGEST_ADAPTER__RTL_FM_EXTRA_ARGS`   | _(empty)_ | Optional passthrough args appended to `rtl_fm` command (whitespace-separated string or JSON array string, e.g., `-M fm -s 24000` or `["-M","fm","-s","24000"]`)                         |
-| `INGEST_ADAPTER__MULTIMON_EXTRA_ARGS` | _(empty)_ | Optional passthrough args appended to `multimon-ng` command (whitespace-separated string or JSON array string, e.g., `--label ingest-a` or `["--label","ingest-a"]`)                    |
+| Variable                              | Default   | Description                                                                                                                                                                                        |
+| ------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INGEST_ADAPTER__GAIN`                | _(auto)_  | Tuner gain (0-50, or `auto`)                                                                                                                                                                       |
+| `INGEST_ADAPTER__SQUELCH`             | `0`       | Squelch level (0-100)                                                                                                                                                                              |
+| `INGEST_ADAPTER__PPM`                 | `0`       | Frequency correction in PPM                                                                                                                                                                        |
+| `INGEST_ADAPTER__DEVICE`              | `0`       | RTL-SDR device index (if multiple receivers)                                                                                                                                                       |
+| `INGEST_ADAPTER__CHARSET`             | `UTF-8`   | Character encoding for decoded messages                                                                                                                                                            |
+| `INGEST_ADAPTER__FORMAT`              | _(unset)_ | Optional decoder hint passed as `-f <value>` to multimon-ng only when set (e.g., `alpha`, `numeric`). The final PagerMon message format is resolved separately (see format resolution rules below) |
+| `INGEST_ADAPTER__RTL_FM_EXTRA_ARGS`   | _(empty)_ | Optional passthrough args appended to `rtl_fm` command (whitespace-separated string or JSON array string, e.g., `-M fm -s 24000` or `["-M","fm","-s","24000"]`)                                    |
+| `INGEST_ADAPTER__MULTIMON_EXTRA_ARGS` | _(empty)_ | Optional passthrough args appended to `multimon-ng` command (whitespace-separated string or JSON array string, e.g., `--label ingest-a` or `["--label","ingest-a"]`)                               |
 
 The final PagerMon message `format` is resolved by ingest-core as normalized `alpha` or `numeric`.
 Resolution order is: explicit `format` -> `metadata.format` -> fallback inference (`alpha` if message text exists, else `numeric`).

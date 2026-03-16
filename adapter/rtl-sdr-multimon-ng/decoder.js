@@ -23,7 +23,7 @@ class MultimonNgDecoder {
     this.logger = logger;
     this.protocols = config.protocols || [];
     this.charset = config.charset;
-    this.format = config.format || 'alpha';
+    this.format = normalizeOptionalString(config.format);
     this.extraArgs = Array.isArray(config.extraArgs) ? config.extraArgs : [];
   }
 
@@ -191,6 +191,15 @@ class MultimonNgDecoder {
   isRunning() {
     return this.process && !this.process.killed;
   }
+}
+
+function normalizeOptionalString(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const trimmed = String(value).trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 export default MultimonNgDecoder;

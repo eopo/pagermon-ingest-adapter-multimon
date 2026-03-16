@@ -75,4 +75,26 @@ describe('MultimonNgDecoder.spawn', () => {
       { stdio: ['pipe', 'pipe', 'pipe'] }
     );
   });
+
+  it('does not pass -f when format is not configured', () => {
+    const proc = createFakeProcess();
+    spawnMock.mockReturnValue(proc);
+
+    const stderrReader = new EventEmitter();
+    createInterfaceMock.mockReturnValue(stderrReader);
+
+    const decoder = new MultimonNgDecoder({
+      protocols: ['POCSAG1200'],
+      charset: 'UTF-8',
+      logger: createMockLogger(vi),
+    });
+
+    decoder.spawn();
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      'multimon-ng',
+      ['-a', 'POCSAG1200', '-t', 'raw', '-C', 'UTF-8', '--timestamp', '--iso8601', '--json', '-'],
+      { stdio: ['pipe', 'pipe', 'pipe'] }
+    );
+  });
 });
