@@ -1,12 +1,12 @@
 /**
  * RTL-SDR + Multimon-NG Source Adapter
  *
- * A complete source adapter that internally composes a receiver and decoder.
+ * A complete source adapter that internally spawns an OS pipeline.
  */
 
 import readline from 'readline';
-import RtlSdrReceiver from './receiver.js';
-import MultimonNgDecoder from './decoder.js';
+import { spawn } from 'child_process';
+import { Message } from '@pagermon/ingest-core';
 
 class RtlSdrMultimonNgAdapter {
   constructor(config = {}) {
@@ -38,7 +38,7 @@ class RtlSdrMultimonNgAdapter {
     }
 
     const adapterConfig = config.adapter || {};
-    const receiverConfig = {
+    this.receiverConfig = {
       frequencies: (adapterConfig.frequencies || '')
         .toString()
         .split(',')
@@ -48,10 +48,11 @@ class RtlSdrMultimonNgAdapter {
       squelch: parseNumber(adapterConfig.squelch),
       ppm: parseNumber(adapterConfig.ppm),
       device: adapterConfig.device ?? null,
+      sampleRate: (config.receiver && config.receiver.sampleRate) || '22050',
       extraArgs: parseArgList(adapterConfig.rtl_fm_extra_args),
       ...(config.receiver || {}),
     };
-    const decoderConfig = {
+    this.decoderConfig = {
       protocols: (adapterConfig.protocols || '')
         .toString()
         .split(',')
@@ -63,22 +64,14 @@ class RtlSdrMultimonNgAdapter {
       ...(config.decoder || {}),
     };
 
-    if (!Array.isArray(receiverConfig.frequencies) || receiverConfig.frequencies.length === 0) {
+    if (!Array.isArray(this.receiverConfig.frequencies) || this.receiverConfig.frequencies.length === 0) {
       throw new Error('RTL-SDR adapter requires receiver.frequencies');
     }
 
-    if (!Array.isArray(decoderConfig.protocols) || decoderConfig.protocols.length === 0) {
+    if (!Array.isArray(this.decoderConfig.protocols) || this.decoderConfig.protocols.length === 0) {
       throw new Error('RTL-SDR adapter requires decoder.protocols');
     }
 
-    this.receiver = new RtlSdrReceiver({
-      ...receiverConfig,
-      logger: baseLogger.child({ component: 'receiver' }),
-    });
-    this.decoder = new MultimonNgDecoder({
-      ...decoderConfig,
-      logger: baseLogger.child({ component: 'decoder' }),
-    });
     this.lineReader = null;
     this.running = false;
   }
@@ -87,21 +80,74 @@ class RtlSdrMultimonNgAdapter {
     return 'rtl-sdr-multimon-ng';
   }
 
+  _buildReceiverArgs() {
+    const rx = this.receiverConfig;
+    const args = ['-s', String(rx.sampleRate)];
+    rx.frequencies.forEach((freq) => args.push('-f', String(freq)));
+    if (rx.gain !== null && rx.gain !== undefined) args.push('-g', String(rx.gain));
+    if (rx.ppm !== null && rx.ppm !== undefined) args.push('-p', String(rx.ppm));
+    if (rx.squelch !== null && rx.squelch !== undefined) args.push('-l', String(rx.squelch));
+    if (rx.device !== null && rx.device !== undefined) args.push('-d', String(rx.device));
+    args.push('-E', 'dc', '-F', '0', '-A', 'fast');
+    if (Array.isArray(rx.extraArgs) && rx.extraArgs.length > 0) {
+      args.push(...rx.extraArgs.map((arg) => String(arg)));
+    }
+    return args;
+  }
+
+  _buildDecoderArgs() {
+    const tx = this.decoderConfig;
+    const args = ['-t', 'raw'];
+    tx.protocols.forEach((protocol) => args.unshift('-a', protocol));
+    if (tx.charset) args.push('-C', tx.charset);
+    if (tx.format) args.push('-f', tx.format);
+    args.push('--timestamp', '--iso8601', '--json', '-');
+    if (Array.isArray(tx.extraArgs) && tx.extraArgs.length > 0) {
+      args.push(...tx.extraArgs.map((arg) => String(arg)));
+    }
+    return args;
+  }
+
   start(onMessage, onClose, onError) {
-    this.receiver.spawn();
-    this.decoder.spawn();
+    const rxArgs = this._buildReceiverArgs();
+    const txArgs = this._buildDecoderArgs();
 
-    const rxOut = this.receiver.getOutputStream();
-    const txIn = this.decoder.getInputStream();
-    rxOut.pipe(txIn);
+    const rxCmd = `rtl_fm ${rxArgs.join(' ')}`;
+    const txCmd = `multimon-ng ${txArgs.join(' ')}`;
+    const combinedCmd = `${rxCmd} | ${txCmd}`;
 
-    const decoderOut = this.decoder.getOutputStream();
-    this.lineReader = readline.createInterface({ input: decoderOut });
+    this.config.logger.info({ command: combinedCmd }, 'Spawning combined OS pipeline');
+
+    this.process = spawn('sh', ['-c', combinedCmd], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    this.process.on('error', (err) => {
+      this.config.logger.error({ err: err.message }, 'Pipeline process error');
+      if (onError) onError(err);
+    });
+
+    this.process.on('exit', (code, signal) => {
+      this.config.logger.error({ code, signal }, 'Pipeline process exited');
+      this.running = false;
+      if (onClose) onClose();
+      const exitCode = typeof code === 'number' ? code : signal ? 1 : 0;
+      process.exit(exitCode);
+    });
+
+    if (this.process.stderr) {
+      const errRl = readline.createInterface({ input: this.process.stderr });
+      errRl.on('line', (line) => {
+        this.config.logger.debug({ line }, 'pipeline stderr');
+      });
+    }
+
+    this.lineReader = readline.createInterface({ input: this.process.stdout });
     this.running = true;
 
     this.lineReader.on('line', (line) => {
       try {
-        const message = this.decoder.parseLine(line, this.label);
+        const message = this.parseLine(line, this.label);
         if (message) {
           this._metricsDecoded?.inc({
             format: message.format || 'unknown',
@@ -135,12 +181,93 @@ class RtlSdrMultimonNgAdapter {
       this.lineReader = null;
     }
 
-    this.decoder.kill();
-    this.receiver.kill();
+    if (this.process) {
+      this.process.kill('SIGTERM');
+    }
   }
 
   isRunning() {
-    return this.running && this.receiver.isRunning() && this.decoder.isRunning();
+    return this.running && this.process && !this.process.killed;
+  }
+
+  parseLine(line, label) {
+    if (!line || line.trim().length === 0) {
+      return null;
+    }
+
+    try {
+      const obj = JSON.parse(line);
+      const demod = obj.demod_name || '';
+
+      let msg;
+
+      if (demod.includes('POCSAG')) {
+        msg = this._parsePocsag(obj);
+      } else if (demod.includes('FLEX')) {
+        msg = this._parseFlex(obj);
+      } else {
+        this.config.logger.debug({ demod }, 'Unknown protocol');
+        return null;
+      }
+
+      if (!msg) return null;
+
+      const messageData = {
+        address: msg.address,
+        message: msg.message,
+        format: msg.format,
+        timestamp: msg.timestamp,
+        time: msg.time,
+        metadata: {
+          protocol: demod,
+          source: label,
+        },
+      };
+
+      return new Message(messageData);
+    } catch {
+      return null;
+    }
+  }
+
+  _parsePocsag(obj) {
+    const alpha = (obj.alpha || '').toString().trim();
+    const numeric = (obj.numeric || '').toString().trim();
+
+    const format = alpha.length > 0 ? 'alpha' : 'numeric';
+    const message = format === 'alpha' ? alpha : numeric;
+
+    if (!message && format === 'alpha') {
+      return null;
+    }
+
+    return {
+      address: String(obj.address || 0) + String(obj.function || 0),
+      message,
+      format,
+      timestamp: Math.floor(new Date(obj.timestamp).getTime() / 1000),
+      time: obj.timestamp,
+    };
+  }
+
+  _parseFlex(obj) {
+    const format = (obj.format || obj.type || obj.message_type || 'alpha').toLowerCase().includes('num')
+      ? 'numeric'
+      : 'alpha';
+
+    const message = (obj.message || '').toString().trim();
+
+    if (!message && format === 'alpha') {
+      return null;
+    }
+
+    return {
+      address: obj.capcode || obj.address || '',
+      message,
+      format,
+      timestamp: Math.floor(new Date(obj.timestamp).getTime() / 1000),
+      time: obj.timestamp,
+    };
   }
 }
 
@@ -170,7 +297,7 @@ function parseArgList(value) {
         return parsed.map((v) => String(v));
       }
     } catch {
-      // Fall back to whitespace split
+      // Fall back
     }
   }
 
