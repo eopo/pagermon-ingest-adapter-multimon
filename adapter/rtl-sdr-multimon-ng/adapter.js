@@ -105,10 +105,11 @@ class RtlSdrMultimonNgAdapter {
     }
     if (tx.charset) args.push('-C', tx.charset);
     if (tx.format) args.push('-f', tx.format);
-    args.push('--timestamp', '--iso8601', '--json', '-');
+    args.push('--timestamp', '--iso8601', '--json');
     if (Array.isArray(tx.extraArgs) && tx.extraArgs.length > 0) {
       args.push(...tx.extraArgs.map((arg) => String(arg)));
     }
+    args.push('-');
     return args;
   }
 
@@ -116,14 +117,22 @@ class RtlSdrMultimonNgAdapter {
     const rxArgs = this._buildReceiverArgs();
     const txArgs = this._buildDecoderArgs();
 
-    const rxCmd = `rtl_fm ${rxArgs.join(' ')}`;
-    const txCmd = `multimon-ng ${txArgs.join(' ')}`;
-    const combinedCmd = `${rxCmd} | ${txCmd}`;
+    this.config.logger.info({ rxArgs, txArgs }, 'Spawning separated OS pipeline');
 
-    this.config.logger.info({ command: combinedCmd }, 'Spawning combined OS pipeline');
+    let exited = false;
 
-    this.process = spawn('sh', ['-c', combinedCmd], {
+    this.rxProcess = spawn('rtl_fm', rxArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    this.process = spawn('multimon-ng', txArgs, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    this.rxProcess.stdout.pipe(this.process.stdin);
+
+    this.rxProcess.on('error', (err) => {
+      this.config.logger.error({ err: err.message }, 'rtl_fm process error');
     });
 
     this.process.on('error', (err) => {
@@ -133,9 +142,12 @@ class RtlSdrMultimonNgAdapter {
 
     this.process.on('exit', (code, signal) => {
       this.config.logger.error({ code, signal }, 'Pipeline process exited');
-      this.running = false;
-      if (onClose) onClose();
-      if (onError) onError(new Error(`Pipeline process exited with code ${code} and signal ${signal}`));
+      if (!exited) {
+        exited = true;
+        this.running = false;
+        if (onClose) onClose();
+        if (code !== 0 && onError) onError(new Error(`Pipeline process exited with code ${code} and signal ${signal}`));
+      }
     });
 
     if (this.process.stderr) {
@@ -167,8 +179,11 @@ class RtlSdrMultimonNgAdapter {
     });
 
     this.lineReader.on('close', () => {
-      this.running = false;
-      if (onClose) onClose();
+      if (!exited) {
+        exited = true;
+        this.running = false;
+        if (onClose) onClose();
+      }
     });
 
     this.lineReader.on('error', (err) => {
@@ -182,6 +197,11 @@ class RtlSdrMultimonNgAdapter {
     if (this.lineReader) {
       this.lineReader.close();
       this.lineReader = null;
+    }
+
+    if (this.rxProcess) {
+      this.rxProcess.kill('SIGTERM');
+      this.rxProcess = null;
     }
 
     if (this.process) {
@@ -248,12 +268,19 @@ class RtlSdrMultimonNgAdapter {
       return null;
     }
 
+    let validMs = new Date(obj.timestamp).getTime();
+    if (isNaN(validMs)) {
+      validMs = Date.now();
+    }
+    const safeUnix = Math.floor(validMs / 1000);
+    const safeTime = isNaN(new Date(obj.timestamp).getTime()) ? new Date(validMs).toISOString() : obj.timestamp;
+
     return {
       address: String(obj.address || 0) + String(obj.function || 0),
       message,
       format,
-      timestamp: Math.floor(new Date(obj.timestamp).getTime() / 1000),
-      time: obj.timestamp,
+      timestamp: safeUnix,
+      time: safeTime,
     };
   }
 
@@ -268,12 +295,19 @@ class RtlSdrMultimonNgAdapter {
       return null;
     }
 
+    let validMs = new Date(obj.timestamp).getTime();
+    if (isNaN(validMs)) {
+      validMs = Date.now();
+    }
+    const safeUnix = Math.floor(validMs / 1000);
+    const safeTime = isNaN(new Date(obj.timestamp).getTime()) ? new Date(validMs).toISOString() : obj.timestamp;
+
     return {
       address: obj.capcode || obj.address || '',
       message,
       format,
-      timestamp: Math.floor(new Date(obj.timestamp).getTime() / 1000),
-      time: obj.timestamp,
+      timestamp: safeUnix,
+      time: safeTime,
     };
   }
 }
