@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.5.1...1.6.0) (2026-03-17)
+
+
+### Features
+
+* use sh pipe instead of node piping for increased performance ([9b461bd](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/9b461bd32af7033ae900bc19096baa354273390f))
+
+
+### Bug Fixes
+
+* apply suggestions ([654c1e3](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/654c1e39329fec49c9247d12892793e14f66c311))
+* implement suggestions ([4c5a8b9](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/4c5a8b904e9f8852828b9d30f4a01b7ecdd6bcc2))
+* switch to os pipe instead of node pipe ([5fc60e9](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/5fc60e91fdb2abb6804bab0fc0ff3f934d0a71f9))
+
+
+### Reverts
+
+* wrongfully removed os pipe ([72a9045](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/72a9045ca6c67b89c3180c4a10e31306a26dec89))
+
 ## [1.5.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.5.0...1.5.1) (2026-03-16)
 
 
