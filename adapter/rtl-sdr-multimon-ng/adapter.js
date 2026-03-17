@@ -83,7 +83,9 @@ class RtlSdrMultimonNgAdapter {
   _buildReceiverArgs() {
     const rx = this.receiverConfig;
     const args = ['-s', String(rx.sampleRate)];
-    rx.frequencies.forEach((freq) => args.push('-f', String(freq)));
+    for (const freq of rx.frequencies) {
+      args.push('-f', String(freq));
+    }
     if (rx.gain !== null && rx.gain !== undefined) args.push('-g', String(rx.gain));
     if (rx.ppm !== null && rx.ppm !== undefined) args.push('-p', String(rx.ppm));
     if (rx.squelch !== null && rx.squelch !== undefined) args.push('-l', String(rx.squelch));
@@ -98,7 +100,9 @@ class RtlSdrMultimonNgAdapter {
   _buildDecoderArgs() {
     const tx = this.decoderConfig;
     const args = ['-t', 'raw'];
-    tx.protocols.forEach((protocol) => args.unshift('-a', protocol));
+    for (const protocol of tx.protocols) {
+      args.unshift('-a', protocol);
+    }
     if (tx.charset) args.push('-C', tx.charset);
     if (tx.format) args.push('-f', tx.format);
     args.push('--timestamp', '--iso8601', '--json', '-');
@@ -131,8 +135,7 @@ class RtlSdrMultimonNgAdapter {
       this.config.logger.error({ code, signal }, 'Pipeline process exited');
       this.running = false;
       if (onClose) onClose();
-      const exitCode = typeof code === 'number' ? code : signal ? 1 : 0;
-      process.exit(exitCode);
+      if (onError) onError(new Error(`Pipeline process exited with code ${code} and signal ${signal}`));
     });
 
     if (this.process.stderr) {
@@ -183,6 +186,7 @@ class RtlSdrMultimonNgAdapter {
 
     if (this.process) {
       this.process.kill('SIGTERM');
+      this.process = null;
     }
   }
 
@@ -225,7 +229,10 @@ class RtlSdrMultimonNgAdapter {
       };
 
       return new Message(messageData);
-    } catch {
+    } catch (err) {
+      if (this.config && this.config.logger) {
+        this.config.logger.debug({ err, rawLine: line }, 'JSON parse error');
+      }
       return null;
     }
   }

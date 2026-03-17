@@ -175,6 +175,16 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
 
       expect(onMessage).toHaveBeenCalledWith(expect.objectContaining({ test: true }));
 
+      proc.emit('error', new Error('Child error'));
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Child error' }));
+
+      proc.emit('exit', 1, null);
+      expect(onClose).toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Pipeline process exited with code 1 and signal null' })
+      );
+      expect(adapter.isRunning()).toBe(false);
+
       adapter.stop();
       expect(proc.kill).toHaveBeenCalledWith('SIGTERM');
       expect(adapter.isRunning()).toBe(false);
@@ -203,6 +213,33 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
       expect(result.message).toBe('hello-world');
       expect(result.format).toBe('alpha');
       expect(result.address).toBe('12341');
+    });
+
+    it('parses pocsag numeric only', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'POCSAG',
+          numeric: '12345678',
+          address: 5678,
+          function: 2,
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
+        'unit-label'
+      );
+      expect(result.message).toBe('12345678');
+      expect(result.format).toBe('numeric');
+      expect(result.address).toBe('56782');
+    });
+
+    it('handles malformed json safely', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine('}{', 'unit-label');
+      expect(result).toBeNull();
+      expect(adapter.config.logger.debug).toHaveBeenCalledWith(
+        expect.objectContaining({ rawLine: '}{' }),
+        'JSON parse error'
+      );
     });
 
     it('parses valid flex', () => {
