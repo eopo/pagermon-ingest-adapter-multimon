@@ -137,9 +137,9 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
         '--timestamp',
         '--iso8601',
         '--json',
-        '-',
         '--label',
         'test',
+        '-',
       ]);
     });
   });
@@ -165,7 +165,7 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
         'sh',
         [
           '-c',
-          'rtl_fm -s 22050 -f 172.5 -E dc -F 0 -A fast | multimon-ng -a POCSAG1200 -t raw --timestamp --iso8601 --json -',
+          "rtl_fm '-s' '22050' '-f' '172.5' '-E' 'dc' '-F' '0' '-A' 'fast' | multimon-ng '-a' 'POCSAG1200' '-t' 'raw' '--timestamp' '--iso8601' '--json' '-'",
         ],
         { stdio: ['ignore', 'pipe', 'pipe'] }
       );

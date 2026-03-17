@@ -117,22 +117,17 @@ class RtlSdrMultimonNgAdapter {
     const rxArgs = this._buildReceiverArgs();
     const txArgs = this._buildDecoderArgs();
 
-    this.config.logger.info({ rxArgs, txArgs }, 'Spawning separated OS pipeline');
+    const escapeArg = (arg) => `'${String(arg).replace(/'/g, "'\\''")}'`;
+    const rxCmd = `rtl_fm ${rxArgs.map(escapeArg).join(' ')}`;
+    const txCmd = `multimon-ng ${txArgs.map(escapeArg).join(' ')}`;
+    const combinedCmd = `${rxCmd} | ${txCmd}`;
+
+    this.config.logger.info({ command: combinedCmd }, 'Spawning combined OS pipeline');
 
     let exited = false;
 
-    this.rxProcess = spawn('rtl_fm', rxArgs, {
+    this.process = spawn('sh', ['-c', combinedCmd], {
       stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    this.process = spawn('multimon-ng', txArgs, {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-
-    this.rxProcess.stdout.pipe(this.process.stdin);
-
-    this.rxProcess.on('error', (err) => {
-      this.config.logger.error({ err: err.message }, 'rtl_fm process error');
     });
 
     this.process.on('error', (err) => {
@@ -197,11 +192,6 @@ class RtlSdrMultimonNgAdapter {
     if (this.lineReader) {
       this.lineReader.close();
       this.lineReader = null;
-    }
-
-    if (this.rxProcess) {
-      this.rxProcess.kill('SIGTERM');
-      this.rxProcess = null;
     }
 
     if (this.process) {
