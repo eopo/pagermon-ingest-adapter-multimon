@@ -1,7 +1,31 @@
-import { describe, expect, it, vi } from 'vitest';
-import { PassThrough } from 'stream';
-import RtlSdrMultimonNgAdapter from '../../../adapter/rtl-sdr-multimon-ng/adapter.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EventEmitter } from 'events';
 import { createMockLogger, createMockMetrics } from '@pagermon/ingest-core/testing';
+import RtlSdrMultimonNgAdapter from '../../../adapter/rtl-sdr-multimon-ng/adapter.js';
+
+const spawnMock = vi.fn();
+const createInterfaceMock = vi.fn();
+
+vi.mock('child_process', () => ({
+  spawn: (...args) => spawnMock(...args),
+}));
+
+vi.mock('readline', () => ({
+  default: {
+    createInterface: (...args) => createInterfaceMock(...args),
+  },
+}));
+
+function createFakeProcess() {
+  const proc = new EventEmitter();
+  proc.stdout = new EventEmitter();
+  proc.stderr = new EventEmitter();
+  proc.killed = false;
+  proc.kill = vi.fn(() => {
+    proc.killed = true;
+  });
+  return proc;
+}
 
 function buildAdapter(metrics = createMockMetrics()) {
   const logger = createMockLogger(vi);
@@ -14,131 +38,237 @@ function buildAdapter(metrics = createMockMetrics()) {
   });
 }
 
-describe('RtlSdrMultimonNgAdapter', () => {
-  it('validates receiver and decoder config', () => {
-    expect(() => {
-      const logger = createMockLogger(vi);
-      new RtlSdrMultimonNgAdapter({
-        receiver: {},
+describe('RtlSdrMultimonNgAdapter Unified', () => {
+  beforeEach(() => {
+    spawnMock.mockReset();
+    createInterfaceMock.mockReset();
+  });
+
+  describe('configuration validations', () => {
+    it('validates receiver and decoder config', () => {
+      expect(() => {
+        new RtlSdrMultimonNgAdapter({
+          receiver: {},
+          decoder: { protocols: ['POCSAG1200'] },
+          logger: createMockLogger(vi),
+        });
+      }).toThrow('receiver.frequencies');
+
+      expect(() => {
+        new RtlSdrMultimonNgAdapter({
+          receiver: { frequencies: [1] },
+          decoder: {},
+          logger: createMockLogger(vi),
+        });
+      }).toThrow('decoder.protocols');
+    });
+
+    it('returns adapter name', () => {
+      const adapter = buildAdapter();
+      expect(adapter.getName()).toBe('rtl-sdr-multimon-ng');
+    });
+  });
+
+  describe('argument generation', () => {
+    it('builds receiver correctly', () => {
+      const adapter = new RtlSdrMultimonNgAdapter({
+        receiver: {
+          frequencies: [172.5, 173.1],
+          gain: 25,
+          squelch: 5,
+          ppm: 1,
+          device: 2,
+          sampleRate: '24000',
+          extraArgs: ['-M', 'fm'],
+        },
         decoder: { protocols: ['POCSAG1200'] },
-        logger,
+        logger: createMockLogger(vi),
       });
-    }).toThrow('receiver.frequencies');
 
-    expect(() => {
-      const logger = createMockLogger(vi);
-      new RtlSdrMultimonNgAdapter({
-        receiver: { frequencies: [1] },
-        decoder: {},
-        logger,
+      expect(adapter._buildReceiverArgs()).toEqual([
+        '-s',
+        '24000',
+        '-f',
+        '172.5',
+        '-f',
+        '173.1',
+        '-g',
+        '25',
+        '-p',
+        '1',
+        '-l',
+        '5',
+        '-d',
+        '2',
+        '-E',
+        'dc',
+        '-F',
+        '0',
+        '-A',
+        'fast',
+        '-M',
+        'fm',
+      ]);
+    });
+
+    it('builds decoder correctly', () => {
+      const adapter = new RtlSdrMultimonNgAdapter({
+        receiver: { frequencies: [172.5] },
+        decoder: {
+          protocols: ['POCSAG1200', 'FLEX'],
+          charset: 'UTF-8',
+          format: 'alpha',
+          extraArgs: ['--label', 'test'],
+        },
+        logger: createMockLogger(vi),
       });
-    }).toThrow('decoder.protocols');
+
+      expect(adapter._buildDecoderArgs()).toEqual([
+        '-a',
+        'FLEX',
+        '-a',
+        'POCSAG1200',
+        '-t',
+        'raw',
+        '-C',
+        'UTF-8',
+        '-f',
+        'alpha',
+        '--timestamp',
+        '--iso8601',
+        '--json',
+        '--label',
+        'test',
+        '-',
+      ]);
+    });
   });
 
-  it('returns adapter name', () => {
-    const adapter = buildAdapter();
-    expect(adapter.getName()).toBe('rtl-sdr-multimon-ng');
+  describe('lifecycle (start / stop / error handling)', () => {
+    it('spawns a combined sh pipeline and handles stdout lines', () => {
+      const adapter = buildAdapter();
+
+      const proc = createFakeProcess();
+      spawnMock.mockReturnValue(proc);
+
+      const stdoutInterface = new EventEmitter();
+      stdoutInterface.close = vi.fn();
+      createInterfaceMock.mockReturnValue(stdoutInterface);
+
+      const onMessage = vi.fn();
+      const onClose = vi.fn();
+      const onError = vi.fn();
+
+      adapter.start(onMessage, onClose, onError);
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        'sh',
+        [
+          '-c',
+          "rtl_fm '-s' '22050' '-f' '172.5' '-E' 'dc' '-F' '0' '-A' 'fast' | multimon-ng '-a' 'POCSAG1200' '-t' 'raw' '--timestamp' '--iso8601' '--json' '-'",
+        ],
+        { stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+
+      adapter.parseLine = vi.fn().mockReturnValueOnce({ test: true });
+      stdoutInterface.emit('line', 'dummy_line');
+
+      expect(onMessage).toHaveBeenCalledWith(expect.objectContaining({ test: true }));
+
+      proc.emit('error', new Error('Child error'));
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Child error' }));
+
+      proc.emit('exit', 1, null);
+      expect(onClose).toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Pipeline process exited with code 1 and signal null' })
+      );
+      expect(adapter.isRunning()).toBe(false);
+
+      adapter.stop();
+      expect(proc.kill).toHaveBeenCalledWith('SIGTERM');
+      expect(adapter.isRunning()).toBe(false);
+    });
   });
 
-  it('processes lines and routes parse errors to onError', async () => {
-    const metrics = createMockMetrics();
-    const adapter = buildAdapter(metrics);
-    const receiverOut = new PassThrough();
-    const decoderIn = new PassThrough();
-    const decoderOut = new PassThrough();
+  describe('parseLine logic', () => {
+    it('ignores empty lines', () => {
+      const adapter = buildAdapter();
+      expect(adapter.parseLine('')).toBeNull();
+      expect(adapter.parseLine('   ')).toBeNull();
+    });
 
-    adapter.receiver = {
-      spawn: vi.fn(),
-      getOutputStream: vi.fn(() => receiverOut),
-      kill: vi.fn(),
-      isRunning: vi.fn(() => true),
-    };
+    it('parses valid pocsag', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'POCSAG',
+          alpha: 'hello-world',
+          address: 1234,
+          function: 1,
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
+        'unit-label'
+      );
+      expect(result.message).toBe('hello-world');
+      expect(result.format).toBe('alpha');
+      expect(result.address).toBe('12341');
+    });
 
-    const parsed = {
-      address: '1234',
-      message: 'hello',
-      format: 'alpha',
-      metadata: { source: 'unit-label' },
-      toPayload() {
-        return this;
-      },
-    };
+    it('parses pocsag numeric only', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'POCSAG',
+          numeric: '12345678',
+          address: 5678,
+          function: 2,
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
+        'unit-label'
+      );
+      expect(result.message).toBe('12345678');
+      expect(result.format).toBe('numeric');
+      expect(result.address).toBe('56782');
+    });
 
-    adapter.decoder = {
-      spawn: vi.fn(),
-      getInputStream: vi.fn(() => decoderIn),
-      getOutputStream: vi.fn(() => decoderOut),
-      parseLine: vi
-        .fn()
-        .mockReturnValueOnce(parsed) // → decoded
-        .mockReturnValueOnce(null) // → skipped
-        .mockImplementationOnce(() => {
-          throw new Error('decode fail');
-        }), // → error
-      kill: vi.fn(),
-      isRunning: vi.fn(() => true),
-    };
+    it('handles malformed json safely', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine('}{', 'unit-label');
+      expect(result).toBeNull();
+      expect(adapter.config.logger.debug).toHaveBeenCalledWith(
+        expect.objectContaining({ rawLine: '}{' }),
+        'JSON parse error'
+      );
+    });
 
-    const onMessage = vi.fn();
-    const onClose = vi.fn();
-    const onError = vi.fn();
+    it('parses valid flex', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'FLEX',
+          message: 'flex message',
+          message_type: 'alpha',
+          capcode: 5678,
+          timestamp: '2023-01-01T13:00:00.000Z',
+        }),
+        'unit-label'
+      );
+      expect(result.message).toBe('flex message');
+      expect(result.format).toBe('alpha');
+      expect(result.address).toBe('5678');
+    });
 
-    adapter.start(onMessage, onClose, onError);
-
-    decoderOut.write('line-a\n');
-    decoderOut.write('line-b\n');
-    decoderOut.write('line-c\n');
-
-    await new Promise((resolve) => setTimeout(resolve, 20));
-
-    expect(onMessage).toHaveBeenCalledWith(parsed);
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'decode fail' }));
-
-    // metrics: decoded counter incremented with format + source labels
-    const decodedCounter = metrics.counter.mock.results[0].value;
-    expect(decodedCounter.inc).toHaveBeenCalledWith({ format: 'alpha', source: 'unit-label' });
-
-    // metrics: skipped counter incremented with source label
-    const skippedCounter = metrics.counter.mock.results[1].value;
-    expect(skippedCounter.inc).toHaveBeenCalledWith({ source: 'unit-label' });
-
-    // metrics: error counter incremented with source label
-    const errorCounter = metrics.counter.mock.results[2].value;
-    expect(errorCounter.inc).toHaveBeenCalledWith({ source: 'unit-label' });
-
-    decoderOut.end();
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('stops and exposes running state', () => {
-    const adapter = buildAdapter();
-
-    adapter.receiver = {
-      spawn: vi.fn(),
-      getOutputStream: vi.fn(),
-      kill: vi.fn(),
-      isRunning: vi.fn(() => true),
-    };
-
-    adapter.decoder = {
-      spawn: vi.fn(),
-      getInputStream: vi.fn(),
-      getOutputStream: vi.fn(),
-      parseLine: vi.fn(),
-      kill: vi.fn(),
-      isRunning: vi.fn(() => true),
-    };
-
-    adapter.running = true;
-    expect(adapter.isRunning()).toBe(true);
-
-    adapter.stop();
-    expect(adapter.running).toBe(false);
-    expect(adapter.receiver.kill).toHaveBeenCalledTimes(1);
-    expect(adapter.decoder.kill).toHaveBeenCalledTimes(1);
-
-    adapter.receiver.isRunning.mockReturnValue(false);
-    expect(adapter.isRunning()).toBe(false);
+    it('ignores unknown demod', () => {
+      const adapter = buildAdapter();
+      const result = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'EAS',
+          message: '...',
+        }),
+        'unit-label'
+      );
+      expect(result).toBeNull();
+    });
   });
 });

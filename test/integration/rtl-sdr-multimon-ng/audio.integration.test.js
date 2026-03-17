@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 import path from 'path';
 import http from 'http';
 import { once } from 'events';
-import MultimonNgDecoder from '../../../adapter/rtl-sdr-multimon-ng/decoder.js';
+import RtlSdrMultimonNgAdapter from '../../../adapter/rtl-sdr-multimon-ng/adapter.js';
 import { ApiClient, createMockLogger } from '@pagermon/ingest-core/testing';
 
 const SAMPLE_WAV_PATH = path.resolve('test/fixtures/pocsag1200.wav');
@@ -123,8 +123,9 @@ describe('multimon-ng audio integration', () => {
     const combinedOutput = `${output.stdout}\n${output.stderr}`.trim();
     expect(combinedOutput.length).toBeGreaterThan(0);
 
-    const decoder = new MultimonNgDecoder({
-      protocols: ['POCSAG1200'],
+    const adapter = new RtlSdrMultimonNgAdapter({
+      decoder: { protocols: ['POCSAG1200'] },
+      receiver: { frequencies: [172.5] }, // required by validation
       logger: createMockLogger(vi),
     });
     const firstJsonLine = combinedOutput
@@ -139,7 +140,7 @@ describe('multimon-ng audio integration', () => {
     expect(rawDecoded.function).toBe(3);
     expect(rawDecoded.alpha).toBe('ALPHA123');
 
-    const message = decoder.parseLine(firstJsonLine, 'audio-integration');
+    const message = adapter.parseLine(firstJsonLine, 'audio-integration');
     expect(message).not.toBeNull();
 
     const client = new ApiClient({ url: baseUrl, apiKey: 'audio-test-key' });
