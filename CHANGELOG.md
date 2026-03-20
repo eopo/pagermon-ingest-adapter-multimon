@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.7.0...1.7.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* verbosity level & parser change ([23de9e1](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/23de9e1cc3a1b33e3965d419cd6afdcae53467c4))
+* verbosity level & parser change ([30b570f](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/30b570f4fe047889fbc3b4cedf5a9e677ebec715))
+
 ## [1.7.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.6.0...1.7.0) (2026-03-20)
 
 
