@@ -35,7 +35,24 @@ class RtlSdrMultimonNgAdapter {
         help: 'Total adapter message parse errors',
         labelNames: ['source'],
       });
+      this._metricsHardwareInfo = metrics.gauge({
+        name: 'adapter_hardware_info',
+        help: 'Hardware and software information of the receiver',
+        labelNames: ['tuner', 'device', 'decoder_version'],
+      });
+      this._metricsHardwareErrors = metrics.counter({
+        name: 'adapter_hardware_errors_total',
+        help: 'Total hardware related errors (e.g., PLL not locked)',
+        labelNames: ['source'],
+      });
+      this._metricsDecodingStats = metrics.counter({
+        name: 'adapter_decoding_stats_total',
+        help: 'Decoding statistic counters from multimon-ng',
+        labelNames: ['source', 'type'],
+      });
     }
+
+    this.hardwareInfo = { tuner: 'unknown', device: 'unknown', decoder_version: 'unknown' };
 
     const adapterConfig = config.adapter || {};
     this.receiverConfig = {
@@ -60,6 +77,7 @@ class RtlSdrMultimonNgAdapter {
         .filter(Boolean),
       charset: adapterConfig.charset ?? null,
       format: parseOptionalString(adapterConfig.format),
+      verbosityLevel: parseNumber(adapterConfig.verbosity_level) ?? 1,
       extraArgs: parseArgList(adapterConfig.multimon_extra_args),
       ...(config.decoder || {}),
     };
@@ -100,6 +118,9 @@ class RtlSdrMultimonNgAdapter {
   _buildDecoderArgs() {
     const tx = this.decoderConfig;
     const args = ['-t', 'raw'];
+    if (tx.verbosityLevel !== null && tx.verbosityLevel !== undefined) {
+      args.push('-v', String(tx.verbosityLevel));
+    }
     for (const protocol of tx.protocols) {
       args.unshift('-a', protocol);
     }
@@ -149,6 +170,7 @@ class RtlSdrMultimonNgAdapter {
       const errRl = readline.createInterface({ input: this.process.stderr });
       errRl.on('line', (line) => {
         this.config.logger.debug({ line }, 'pipeline stderr');
+        this._parseTelemetry(line);
       });
     }
 
@@ -204,6 +226,41 @@ class RtlSdrMultimonNgAdapter {
     return this.running && this.process && !this.process.killed;
   }
 
+  _parseTelemetry(line) {
+    if (!line) return;
+
+    if (line.includes('PLL not locked!')) {
+      this._metricsHardwareErrors?.inc({ source: this.label });
+    }
+
+    if (line.includes('Error:') || line.includes('error decoding') || line.includes('Bit error')) {
+      this._metricsDecodingStats?.inc({ source: this.label, type: 'decode_error' });
+    }
+
+    let updatedInfo = false;
+    const tunerMatch = line.match(/Found (.+) tuner/i);
+    if (tunerMatch) {
+      this.hardwareInfo.tuner = tunerMatch[1].trim();
+      updatedInfo = true;
+    }
+
+    const deviceMatch = line.match(/Using device \d+: (.+)/i);
+    if (deviceMatch) {
+      this.hardwareInfo.device = deviceMatch[1].trim();
+      updatedInfo = true;
+    }
+
+    const versionMatch = line.match(/multimon-ng\s+([0-9.]+)/i);
+    if (versionMatch) {
+      this.hardwareInfo.decoder_version = versionMatch[1].trim();
+      updatedInfo = true;
+    }
+
+    if (updatedInfo) {
+      this._metricsHardwareInfo?.set(this.hardwareInfo, 1);
+    }
+  }
+
   parseLine(line, label) {
     if (!line || line.trim().length === 0) {
       return null;
@@ -248,13 +305,18 @@ class RtlSdrMultimonNgAdapter {
   }
 
   _parsePocsag(obj) {
-    const alpha = (obj.alpha || '').toString().trim();
-    const numeric = (obj.numeric || '').toString().trim();
+    let format = 'tone';
+    let message = '';
 
-    const format = alpha.length > 0 ? 'alpha' : 'numeric';
-    const message = format === 'alpha' ? alpha : numeric;
+    if (obj.alpha !== undefined) {
+      format = 'alpha';
+      message = String(obj.alpha).trim();
+    } else if (obj.numeric !== undefined) {
+      format = 'numeric';
+      message = String(obj.numeric).trim();
+    }
 
-    if (!message && format === 'alpha') {
+    if ((format === 'alpha' || format === 'numeric') && !message) {
       return null;
     }
 
@@ -275,13 +337,27 @@ class RtlSdrMultimonNgAdapter {
   }
 
   _parseFlex(obj) {
-    const format = (obj.format || obj.type || obj.message_type || 'alpha').toLowerCase().includes('num')
-      ? 'numeric'
-      : 'alpha';
+    const rawFormat = (obj.format || obj.type || obj.message_type || '').toLowerCase();
+    let message = (obj.message || '').toString().trim();
 
-    const message = (obj.message || '').toString().trim();
+    let format = 'tone';
+    if (rawFormat.includes('num')) {
+      format = 'numeric';
+    } else if (rawFormat.includes('hex')) {
+      format = 'alpha';
+      let asc = '';
+      const hexStr = message.replace(/[^0-9a-fA-F]/g, '');
+      for (let i = 0; i < hexStr.length; i += 2) {
+        const charCode = parseInt(hexStr.substring(i, 2), 16);
+        if (charCode >= 32 && charCode <= 126) asc += String.fromCharCode(charCode);
+        else asc += '.';
+      }
+      message = asc.trim();
+    } else if (rawFormat.includes('alpha') || rawFormat.includes('aln') || message.length > 0) {
+      format = 'alpha';
+    }
 
-    if (!message && format === 'alpha') {
+    if ((format === 'alpha' || format === 'numeric') && !message) {
       return null;
     }
 
