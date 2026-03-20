@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.6.0...1.7.0) (2026-03-20)
+
+
+### Features
+
+* enhance telemetry parsing and metrics tracking for hardware and decoding errors ([62c5634](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/62c5634a3b7d8a2140a18966e444210bc79ecc93))
+* enhance telemetry parsing and metrics tracking for hardware and… ([ab922b3](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/ab922b31c390e53f7a229b7fe6829dfa5fc0c716))
+
 ## [1.6.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.5.1...1.6.0) (2026-03-17)
 
 
