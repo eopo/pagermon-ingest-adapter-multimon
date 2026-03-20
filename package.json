@@ -55,6 +55,6 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@pagermon/ingest-core": "^1.5.0"
+    "@pagermon/ingest-core": "^1.6.0"
   }
 }
