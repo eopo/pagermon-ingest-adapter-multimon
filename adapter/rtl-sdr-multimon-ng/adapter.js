@@ -347,8 +347,8 @@ class RtlSdrMultimonNgAdapter {
       format = 'alpha';
       let asc = '';
       const hexStr = message.replace(/[^0-9a-fA-F]/g, '');
-      for (let i = 0; i < hexStr.length; i += 2) {
-        const charCode = parseInt(hexStr.substring(i, 2), 16);
+      for (let i = 0; i + 1 < hexStr.length; i += 2) {
+        const charCode = parseInt(hexStr.slice(i, i + 2), 16);
         if (charCode >= 32 && charCode <= 126) asc += String.fromCharCode(charCode);
         else asc += '.';
       }
