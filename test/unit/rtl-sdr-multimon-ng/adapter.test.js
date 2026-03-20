@@ -131,7 +131,7 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
         '-t',
         'raw',
         '-v',
-        '1',
+        '6',
         '-C',
         'UTF-8',
         '-f',
@@ -167,7 +167,7 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
         'sh',
         [
           '-c',
-          "rtl_fm '-s' '22050' '-f' '172.5' '-E' 'dc' '-F' '0' '-A' 'fast' | multimon-ng '-a' 'POCSAG1200' '-t' 'raw' '-v' '1' '--timestamp' '--iso8601' '--json' '-'",
+          "rtl_fm '-s' '22050' '-f' '172.5' '-E' 'dc' '-F' '0' '-A' 'fast' | multimon-ng '-a' 'POCSAG1200' '-t' 'raw' '-v' '6' '--timestamp' '--iso8601' '--json' '-'",
         ],
         { stdio: ['ignore', 'pipe', 'pipe'] }
       );
@@ -242,6 +242,22 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
         expect.objectContaining({ rawLine: '}{' }),
         'JSON parse error'
       );
+    });
+
+    it('handles JSON with leading telemetry (e.g. from verbosity=6)', () => {
+      const adapter = buildAdapter();
+
+      const mixedLine =
+        'Certainty:  95  <LOST SYNC> {"demod_name": "POCSAG", "alpha": "test", "address": 1234, "function": 1}';
+      const result = adapter.parseLine(mixedLine, 'unit-label');
+
+      expect(result).not.toBeNull();
+      expect(result.message).toBe('test');
+      expect(result.format).toBe('alpha');
+
+      // verify metrics where tracked
+      expect(adapter._metricsSignalCertainty.observe).toHaveBeenCalledWith({ source: 'unit-label' }, 95);
+      expect(adapter._metricsSyncLoss.inc).toHaveBeenCalledWith({ source: 'unit-label' });
     });
 
     it('parses valid flex', () => {

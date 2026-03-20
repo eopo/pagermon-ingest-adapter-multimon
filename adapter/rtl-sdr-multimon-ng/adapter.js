@@ -50,6 +50,17 @@ class RtlSdrMultimonNgAdapter {
         help: 'Decoding statistic counters from multimon-ng',
         labelNames: ['source', 'type'],
       });
+      this._metricsSignalCertainty = metrics.histogram({
+        name: 'adapter_signal_certainty',
+        help: 'Signal certainty of decoding operations',
+        labelNames: ['source'],
+        buckets: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+      });
+      this._metricsSyncLoss = metrics.counter({
+        name: 'adapter_sync_lost_total',
+        help: 'Total synchronization losses detected in the decoder',
+        labelNames: ['source'],
+      });
     }
 
     this.hardwareInfo = { tuner: 'unknown', device: 'unknown', decoder_version: 'unknown' };
@@ -77,7 +88,7 @@ class RtlSdrMultimonNgAdapter {
         .filter(Boolean),
       charset: adapterConfig.charset ?? null,
       format: parseOptionalString(adapterConfig.format),
-      verbosityLevel: parseNumber(adapterConfig.verbosity_level) ?? 1,
+      verbosityLevel: parseNumber(adapterConfig.verbosity_level) ?? 6,
       extraArgs: parseArgList(adapterConfig.multimon_extra_args),
       ...(config.decoder || {}),
     };
@@ -259,6 +270,16 @@ class RtlSdrMultimonNgAdapter {
     if (updatedInfo) {
       this._metricsHardwareInfo?.set(this.hardwareInfo, 1);
     }
+
+    if (line.includes('<LOST SYNC>')) {
+      this._metricsSyncLoss?.inc({ source: this.label });
+    }
+
+    const certaintyMatch = line.match(/Certainty:\s*(\d+)/i);
+    if (certaintyMatch) {
+      const certaintyVal = parseInt(certaintyMatch[1], 10);
+      this._metricsSignalCertainty?.observe({ source: this.label }, certaintyVal);
+    }
   }
 
   parseLine(line, label) {
@@ -266,8 +287,19 @@ class RtlSdrMultimonNgAdapter {
       return null;
     }
 
+    let jsonStr = line;
+    const jsonStartLabel = line.indexOf('{');
+    if (jsonStartLabel > 0) {
+      const prefix = line.substring(0, jsonStartLabel);
+      this._parseTelemetry(prefix);
+      jsonStr = line.substring(jsonStartLabel);
+    } else if (jsonStartLabel === -1) {
+      this._parseTelemetry(line);
+      return null;
+    }
+
     try {
-      const obj = JSON.parse(line);
+      const obj = JSON.parse(jsonStr);
       const demod = obj.demod_name || '';
 
       let msg;
