@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.7.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.7.1...v1.7.2) (2026-04-21)
+
+
+### Dependencies
+
+* **app:** bump lint-staged from 16.3.3 to 16.4.0 ([#68](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/68)) ([2b1aa0d](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/2b1aa0d997a84b086b2ceb61d2dad6fa63d26259))
+* **app:** bump the npm-tooling group with 8 updates ([#70](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/70)) ([0eed096](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/0eed0963cb87701eb7960dbeecbcdd5ef4b9376f))
+* **app:** update @pagermon/ingest-core to v1.6.1 ([#54](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/54)) ([4102ae8](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/4102ae8ec0a2fae0d78d601f6906f17c3223be29))
+* **core:** update @pagermon/ingest-core to v1.6.2 ([#75](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/75)) ([af70d64](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/af70d641f619934c87f3686cf02ae427d9a82467))
+
 ## [1.7.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.7.0...1.7.1) (2026-03-20)
 
 
