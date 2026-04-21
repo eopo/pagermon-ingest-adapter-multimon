@@ -60,8 +60,8 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           base: main
           branch: bot/update-core-${{ steps.version.outputs.npm_version }}
-          title: "fix(deps): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
-          commit-message: "fix(deps): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
+          title: "deps(core): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
+          commit-message: "deps(core): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
           body: |
             Automated core dependency update after ingest-core release.
 
