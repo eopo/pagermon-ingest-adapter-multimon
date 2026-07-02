@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.2...v1.7.3) (2026-07-02)
+
+
+### Bug Fixes
+
+* **metrics:** remove duplicate device entry ([#87](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/87)) ([d60376c](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/d60376c689a8c3a31bc631cb75cd17976126e643))
+
+
+### Dependencies
+
+* **app:** bump the npm-tooling group across 1 directory with 10 updates ([#85](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/85)) ([5eb40b7](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/5eb40b741f23e19a1827fac288dd07d9ec80dda8))
+* **core:** update @pagermon/ingest-core to v1.6.3 ([#88](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/88)) ([3568604](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/356860455ab9329456881a708a197cc75e73f8ab))
+* **docker:** bump node in the docker-images group across 1 directory ([#80](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/80)) ([8a6435e](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/8a6435e9c3e0381dc821a1dd729c146d099ed65a))
+
 ## [1.7.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/1.7.1...v1.7.2) (2026-04-21)
 
 
