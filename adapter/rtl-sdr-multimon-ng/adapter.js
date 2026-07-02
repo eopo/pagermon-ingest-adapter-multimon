@@ -269,8 +269,8 @@ class RtlSdrMultimonNgAdapter {
     }
 
     if (updatedInfo) {
-      if (this._lastHardwareInfoLabels) {
-        this._metricsHardwareInfo?.remove(this._lastHardwareInfoLabels);
+      if (this._lastHardwareInfoLabels && typeof this._metricsHardwareInfo?.remove === 'function') {
+        this._metricsHardwareInfo.remove(this._lastHardwareInfoLabels);
       }
       this._lastHardwareInfoLabels = { ...this.hardwareInfo };
       this._metricsHardwareInfo?.set(this._lastHardwareInfoLabels, 1);
