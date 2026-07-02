@@ -64,6 +64,7 @@ class RtlSdrMultimonNgAdapter {
     }
 
     this.hardwareInfo = { tuner: 'unknown', device: 'unknown', decoder_version: 'unknown' };
+    this._lastHardwareInfoLabels = null;
 
     const adapterConfig = config.adapter || {};
     this.receiverConfig = {
@@ -268,7 +269,11 @@ class RtlSdrMultimonNgAdapter {
     }
 
     if (updatedInfo) {
-      this._metricsHardwareInfo?.set(this.hardwareInfo, 1);
+      if (this._lastHardwareInfoLabels) {
+        this._metricsHardwareInfo?.remove(this._lastHardwareInfoLabels);
+      }
+      this._lastHardwareInfoLabels = { ...this.hardwareInfo };
+      this._metricsHardwareInfo?.set(this._lastHardwareInfoLabels, 1);
     }
 
     if (line.includes('<LOST SYNC>')) {
