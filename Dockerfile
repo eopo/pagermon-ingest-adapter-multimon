@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
     # At time of creation of this dockerfile, the necessary JSON-Output format features were not yet in a released version of multimon-ng, so we need to build from a specific commit.
-RUN git clone --depth 100 https://github.com/EliasOenal/multimon-ng.git /tmp/multimon-ng && \
-    git -C /tmp/multimon-ng checkout ab4446451f3d24a8b9c0ebefac160fef4f28e1fe && \
+RUN git clone --filter=blob:none --no-checkout https://github.com/EliasOenal/multimon-ng.git /tmp/multimon-ng && \
+    git -C /tmp/multimon-ng fetch --depth 1 origin ab4446451f3d24a8b9c0ebefac160fef4f28e1fe && git -C /tmp/multimon-ng checkout --detach FETCH_HEAD && \
     cmake -S /tmp/multimon-ng -B /tmp/multimon-ng/build && \
     cmake --build /tmp/multimon-ng/build && \
     cmake --install /tmp/multimon-ng/build && \
