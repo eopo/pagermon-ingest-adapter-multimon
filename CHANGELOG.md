@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.3...v1.7.3) (2026-07-02)
+
+
+### Bug Fixes
+
+* **build:** include more commits ([#90](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/90)) ([4884033](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/48840334621c7d7890c68a40e8a7b98ad61b10e1))
+
 ## [1.7.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.2...v1.7.3) (2026-07-02)
 
 
