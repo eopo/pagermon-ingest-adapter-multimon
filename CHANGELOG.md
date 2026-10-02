@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.4](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.3...v1.7.4) (2026-10-02)
+
+
+### Dependencies
+
+* **app:** bump the npm-tooling group across 1 directory with 9 updates ([#98](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/98)) ([c0d9e96](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/c0d9e96798dc44076969337f58ff3589360815ca))
+* **core:** update @pagermon/ingest-core to v1.6.4 ([#100](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/100)) ([67e26cc](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/67e26cc6aba84c3c699ba89572762741da180972))
+
 ## [1.7.3](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.3...v1.7.3) (2026-07-02)
 
 
