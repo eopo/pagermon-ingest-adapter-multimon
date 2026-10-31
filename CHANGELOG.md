@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.4...v1.8.0) (2026-10-31)
+
+
+### Features
+
+* update ingest-core with improved dlc ([f00c2e7](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/f00c2e78f0cd011f633dbd53ee201705f0fb30b2))
+
+
+### Dependencies
+
+* **app:** bump the npm-tooling group across 1 directory with 10 updates ([#105](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/105)) ([33f3cf2](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/33f3cf2a3cb852d99c0ae053818690986165d387))
+
 ## [1.7.4](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.7.3...v1.7.4) (2026-10-02)
 
 
