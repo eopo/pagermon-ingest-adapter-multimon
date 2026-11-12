@@ -347,13 +347,13 @@ class RtlSdrMultimonNgAdapter {
 
     if (obj.alpha !== undefined) {
       format = 'alpha';
-      message = String(obj.alpha).trim();
+      message = String(obj.alpha);
     } else if (obj.numeric !== undefined) {
       format = 'numeric';
-      message = String(obj.numeric).trim();
+      message = String(obj.numeric);
     }
 
-    if ((format === 'alpha' || format === 'numeric') && !message) {
+    if ((format === 'alpha' || format === 'numeric') && !message.trim()) {
       return null;
     }
 
@@ -375,7 +375,7 @@ class RtlSdrMultimonNgAdapter {
 
   _parseFlex(obj) {
     const rawFormat = (obj.format || obj.type || obj.message_type || '').toLowerCase();
-    let message = (obj.message || '').toString().trim();
+    let message = String(obj.message ?? '');
 
     let format = 'tone';
     if (rawFormat.includes('num')) {
@@ -389,12 +389,12 @@ class RtlSdrMultimonNgAdapter {
         if (charCode >= 32 && charCode <= 126) asc += String.fromCharCode(charCode);
         else asc += '.';
       }
-      message = asc.trim();
+      message = asc;
     } else if (rawFormat.includes('alpha') || rawFormat.includes('aln') || message.length > 0) {
       format = 'alpha';
     }
 
-    if ((format === 'alpha' || format === 'numeric') && !message) {
+    if ((format === 'alpha' || format === 'numeric') && !message.trim()) {
       return null;
     }
 

@@ -277,6 +277,43 @@ describe('RtlSdrMultimonNgAdapter Unified', () => {
       expect(result.address).toBe('5678');
     });
 
+    it('preserves leading and trailing whitespace in decoded messages', () => {
+      const adapter = buildAdapter();
+      const pocsagAlpha = adapter.parseLine(
+        JSON.stringify({ demod_name: 'POCSAG', alpha: '  alpha message  ' }),
+        'unit-label'
+      );
+      const pocsagNumeric = adapter.parseLine(
+        JSON.stringify({ demod_name: 'POCSAG', numeric: ' 12345678 ' }),
+        'unit-label'
+      );
+      const flexAlpha = adapter.parseLine(
+        JSON.stringify({
+          demod_name: 'FLEX',
+          message: '  flex message  ',
+          message_type: 'alpha',
+          capcode: 5678,
+        }),
+        'unit-label'
+      );
+      const flexHex = adapter.parseLine(
+        JSON.stringify({ demod_name: 'FLEX', message: '204120', message_type: 'hex', capcode: 5678 }),
+        'unit-label'
+      );
+
+      expect(pocsagAlpha.message).toBe('  alpha message  ');
+      expect(pocsagNumeric.message).toBe(' 12345678 ');
+      expect(flexAlpha.message).toBe('  flex message  ');
+      expect(flexHex.message).toBe(' A ');
+      expect(adapter.parseLine(JSON.stringify({ demod_name: 'POCSAG', alpha: '   ' }), 'unit-label')).toBeNull();
+      expect(
+        adapter.parseLine(
+          JSON.stringify({ demod_name: 'FLEX', message: '   ', message_type: 'alpha', capcode: 5678 }),
+          'unit-label'
+        )
+      ).toBeNull();
+    });
+
     it('ignores unknown demod', () => {
       const adapter = buildAdapter();
       const result = adapter.parseLine(
