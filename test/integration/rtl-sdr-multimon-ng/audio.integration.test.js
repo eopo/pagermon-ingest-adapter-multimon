@@ -154,7 +154,7 @@ describe('multimon-ng audio integration', () => {
 
     // Verify decoder -> Message -> API payload transformation
     expect(receivedRequest.payload.address).toBe(`${rawDecoded.address}${rawDecoded.function}`);
-    expect(receivedRequest.payload.message).toBe(rawDecoded.alpha.trim());
+    expect(receivedRequest.payload.message).toBe(rawDecoded.alpha);
     expect(receivedRequest.payload.format).toBe('alpha');
     expect(receivedRequest.payload.source).toBe('audio-integration');
     expect(receivedRequest.payload.time).toBe(rawDecoded.timestamp);
