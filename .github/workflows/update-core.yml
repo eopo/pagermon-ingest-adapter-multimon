@@ -35,11 +35,14 @@ jobs:
 
       - name: Get core version
         id: version
+        env:
+          INPUT_CORE_VERSION: ${{ github.event.inputs.core_version }}
+          DISPATCH_CORE_VERSION: ${{ github.event.client_payload.core_version }}
         run: |
-          if [ -n "${{ github.event.inputs.core_version }}" ]; then
-            VERSION="${{ github.event.inputs.core_version }}"
+          if [ -n "$INPUT_CORE_VERSION" ]; then
+            VERSION="$INPUT_CORE_VERSION"
           else
-            VERSION="${{ github.event.client_payload.core_version }}"
+            VERSION="$DISPATCH_CORE_VERSION"
           fi
           # Remove 'v' prefix for npm
           NPM_VERSION="${VERSION#v}"
@@ -47,9 +50,31 @@ jobs:
           echo "npm_version=${NPM_VERSION}" >> $GITHUB_OUTPUT
           echo "Updating to core version: ${VERSION} (npm: ${NPM_VERSION})"
 
-      - name: Update core dependency
+      - name: Wait for core package
+        env:
+          CORE_VERSION: ${{ steps.version.outputs.npm_version }}
         run: |
-          npm install @pagermon/ingest-core@${{ steps.version.outputs.npm_version }} --save-exact
+          for attempt in {1..30}; do
+            if npm view \
+              "@pagermon/ingest-core@${CORE_VERSION}" \
+              version >/dev/null 2>&1; then
+              echo "Core package available: ${CORE_VERSION}"
+              exit 0
+            fi
+            echo "Waiting for core package (attempt ${attempt}/30)"
+            sleep 10
+          done
+          echo "::error::Core package unavailable after 5 minutes: \
+            @pagermon/ingest-core@${CORE_VERSION}"
+          exit 1
+
+      - name: Update core dependency
+        env:
+          CORE_VERSION: ${{ steps.version.outputs.npm_version }}
+        run: |
+          npm install \
+            "@pagermon/ingest-core@${CORE_VERSION}" \
+            --save-exact
 
       - name: Run tests
         run: npm test
