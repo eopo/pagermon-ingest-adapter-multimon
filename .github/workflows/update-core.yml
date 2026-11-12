@@ -7,16 +7,16 @@ on:
     inputs:
       core_version:
         description: 'Core version to update to (e.g., 1.0.5)'
-        required: false
+        required: true
         type: string
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   update-dependency:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     concurrency:
       group: update-core-dependency
       cancel-in-progress: true
@@ -33,44 +33,56 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Get core version
+      - name: Resolve core version
         id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.core_version || github.event.client_payload.core_version }}
         run: |
-          if [ -n "${{ github.event.inputs.core_version }}" ]; then
-            VERSION="${{ github.event.inputs.core_version }}"
-          else
-            VERSION="${{ github.event.client_payload.core_version }}"
+          VERSION="${REQUESTED_VERSION#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid core version: '${REQUESTED_VERSION}'"
+            exit 1
           fi
-          # Remove 'v' prefix for npm
-          NPM_VERSION="${VERSION#v}"
-          echo "core_version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "npm_version=${NPM_VERSION}" >> $GITHUB_OUTPUT
-          echo "Updating to core version: ${VERSION} (npm: ${NPM_VERSION})"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Update core dependency
+      # The dispatch arrives right after publishing, when npm cannot resolve the new version for a
+      # few minutes, while the release asset (the same tarball as on npm) is downloadable immediately.
+      # package.json keeps a plain version; only the lockfile `resolved` URL points to the asset, so
+      # `npm ci` (CI, Docker build) downloads it without ever querying the registry for core.
+      - name: Install core release
+        env:
+          CORE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          npm install @pagermon/ingest-core@${{ steps.version.outputs.npm_version }} --save-exact
-
-      - name: Run tests
-        run: npm test
+          npm install "https://github.com/eopo/pagermon-ingest-core/releases/download/v${CORE_VERSION}/pagermon-ingest-core-${CORE_VERSION}.tgz"
+          npm pkg set "dependencies.@pagermon/ingest-core=${CORE_VERSION}"
+          npm install --package-lock-only --offline
 
       - name: Create Pull Request to main
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           base: main
-          branch: bot/update-core-${{ steps.version.outputs.npm_version }}
-          title: "deps(core): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
-          commit-message: "deps(core): update @pagermon/ingest-core to ${{ steps.version.outputs.core_version }}"
+          branch: bot/update-core-${{ steps.version.outputs.version }}
+          title: 'deps(core): update @pagermon/ingest-core to v${{ steps.version.outputs.version }}'
+          commit-message: 'deps(core): update @pagermon/ingest-core to v${{ steps.version.outputs.version }}'
           body: |
             Automated core dependency update after ingest-core release.
 
-            - Source release: `${{ steps.version.outputs.core_version }}`
-            - Target branch: `main`
+            - Source release: `v${{ steps.version.outputs.version }}`
             - Triggered by: `${{ github.event_name }}`
-          labels: |
-            dependencies
-            automerge
+
+            Auto-merge is enabled; the PR merges once the required CI checks pass.
+          labels: dependencies
           add-paths: |
             package.json
             package-lock.json
+
+      # A personal access token is required: merges performed via GITHUB_TOKEN do not
+      # trigger the push workflows on main (release-please).
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: gh pr merge "$PR_NUMBER" --auto --squash --repo "$GITHUB_REPOSITORY"
