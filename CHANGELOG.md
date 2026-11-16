@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.8.1...v1.8.2) (2026-11-16)
+
+
+### Dependencies
+
+* **core:** update @pagermon/ingest-core to v1.7.3 ([#122](https://github.com/eopo/pagermon-ingest-adapter-multimon/issues/122)) ([4f87a34](https://github.com/eopo/pagermon-ingest-adapter-multimon/commit/4f87a34b067c8bd5164268fd91a6e5ba2c114bd2))
+
 ## [1.8.1](https://github.com/eopo/pagermon-ingest-adapter-multimon/compare/v1.8.0...v1.8.1) (2026-11-12)
 
 
